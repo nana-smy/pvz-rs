@@ -227,6 +227,8 @@ impl Game {
     }
 
     pub fn start(&mut self) {
+        self.sfx.click();
+        self.sfx.music(true);
         self.state = State::Playing;
         self.elapsed = 0.0;
         self.sun = 150;
@@ -909,6 +911,7 @@ impl Game {
                 let used = self.mowers.iter().any(|m| m.row == z.row && m.used);
                 if used {
                     self.state = State::Lost;
+                    self.sfx.music(false);
                     self.sfx.lose();
                     return;
                 }
@@ -921,6 +924,7 @@ impl Game {
                 self.win_delay += dt;
                 if self.win_delay > 1.4 {
                     self.state = State::Won;
+                    self.sfx.music(false);
                     self.sfx.win();
                 }
             } else {
@@ -951,6 +955,8 @@ impl Game {
                 }
                 if rect_contains(BTN_PAUSE, x, y) {
                     self.state = State::Paused;
+                    self.sfx.pause();
+                    self.sfx.music(false);
                     return;
                 }
                 if rect_contains(BTN_RESTART, x, y) {
@@ -960,6 +966,8 @@ impl Game {
                 if rect_contains(BTN_SOUND, x, y) {
                     self.muted = !self.muted;
                     self.sfx.enabled = !self.muted;
+                    self.sfx.click();
+                    self.sfx.music(!self.muted);
                     return;
                 }
                 // 阳光优先
@@ -1050,6 +1058,8 @@ impl Game {
             State::Paused => {
                 if rect_contains(BTN_PAUSE, x, y) || rect_contains(START_BTN, x, y) {
                     self.state = State::Playing;
+                    self.sfx.click();
+                    self.sfx.music(true);
                 }
             }
             State::Won | State::Lost => {
@@ -1125,8 +1135,11 @@ impl Game {
             "Space" => {
                 if self.state == State::Playing {
                     self.state = State::Paused;
+                    self.sfx.pause();
+                    self.sfx.music(false);
                 } else if self.state == State::Paused {
                     self.state = State::Playing;
+                    self.sfx.music(true);
                 } else if self.state == State::Menu {
                     self.start();
                 }
@@ -1136,11 +1149,14 @@ impl Game {
                 self.shovel = false;
                 if self.state == State::Playing {
                     self.state = State::Paused;
+                    self.sfx.pause();
+                    self.sfx.music(false);
                 }
             }
             "KeyM" => {
                 self.muted = !self.muted;
                 self.sfx.enabled = !self.muted;
+                self.sfx.music(!self.muted);
             }
             "KeyD" => {
                 self.debug = !self.debug;

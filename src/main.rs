@@ -1,3 +1,4 @@
+mod assets;
 mod defs;
 mod game;
 mod render;
@@ -32,6 +33,7 @@ pub fn start() -> Result<(), JsValue> {
         .ok_or("no 2d context")?
         .dyn_into::<CanvasRenderingContext2d>()?;
 
+    assets::init();
     let game = Rc::new(RefCell::new(game::Game::new()));
 
     // 指针按下

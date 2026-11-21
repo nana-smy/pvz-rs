@@ -1,3 +1,4 @@
+use crate::assets::{self, Art};
 use crate::defs::*;
 use crate::game::{Game, Mower, PKind, Particle, Plant, State, Sun, SunState, Zombie};
 use std::f64::consts::PI;
@@ -501,7 +502,24 @@ fn draw_plant(p: &P, pl: &Plant, time: f32) {
     p.restore();
 }
 
+fn art_of(kind: PlantKind) -> Option<Art> {
+    match kind {
+        PlantKind::Sunflower => Some(Art::Sunflower),
+        PlantKind::Peashooter => Some(Art::Peashooter),
+        PlantKind::SnowPea => Some(Art::SnowPea),
+        PlantKind::Repeater => Some(Art::Repeater),
+        PlantKind::WallNut => Some(Art::Wallnut),
+        PlantKind::Cherry => Some(Art::Cherry),
+    }
+}
+
 fn draw_plant_kind(p: &P, kind: PlantKind, cx: f32, base: f32, t: f32, hp: f32, fuse: f32) {
+    if let Some(art) = art_of(kind) {
+        if assets::ready() {
+            draw_art_plant(p, kind, art, cx, base, t, hp, fuse);
+            return;
+        }
+    }
     match kind {
         PlantKind::Sunflower => draw_sunflower(p, cx, base, t),
         PlantKind::Peashooter => draw_peashooter(p, cx, base, t, 0.0),
@@ -510,6 +528,52 @@ fn draw_plant_kind(p: &P, kind: PlantKind, cx: f32, base: f32, t: f32, hp: f32, 
         PlantKind::WallNut => draw_wallnut(p, cx, base, t, hp),
         PlantKind::Cherry => draw_cherry(p, cx, base, t, fuse),
     }
+}
+
+fn draw_art_plant(p: &P, kind: PlantKind, art: Art, cx: f32, base: f32, t: f32, hp: f32, fuse: f32) {
+    let Some(img) = assets::image(art) else { return };
+    let ih = img.height() as f32;
+    let iw = img.width() as f32;
+    if ih <= 0.0 {
+        return;
+    }
+    let h = match art {
+        Art::Sunflower => 116.0,
+        Art::Peashooter => 108.0,
+        Art::Repeater => 108.0,
+        Art::Wallnut => 96.0,
+        Art::Cherry => 92.0,
+        Art::SnowPea => 108.0,
+    };
+    let w = h * iw / ih;
+    let bob = (t * 2.1).sin() * 1.6;
+    let sway = (t * 1.25).sin() * 0.012;
+    let pulse = if kind == PlantKind::Cherry && fuse < 0.55 {
+        1.0 + (t * 16.0).sin().abs() * 0.10
+    } else {
+        1.0
+    };
+    p.save();
+    p.c.translate(cx as f64, (base + bob) as f64);
+    p.c.rotate(sway as f64);
+    p.c.scale(pulse as f64, pulse as f64);
+    let _ = p.c.draw_image_with_html_image_element_and_dw_and_dh(
+        &img,
+        (-w * 0.5) as f64,
+        -h as f64,
+        w as f64,
+        h as f64,
+    );
+    // 坚果受伤：叠加裂纹提示
+    if kind == PlantKind::WallNut && hp < 0.7 {
+        let a = (0.7 - hp) / 0.7;
+        p.line(&[(-w*0.22, -h*0.72), (-w*0.05, -h*0.5), (-w*0.16, -h*0.36)], 2.0, rgba(70,40,15, 0.55*a));
+        p.line(&[(w*0.18, -h*0.3), (w*0.02, -h*0.18), (w*0.12, -h*0.05)], 2.2, rgba(70,40,15, 0.5*a));
+        if hp < 0.35 {
+            p.line(&[(-w*0.3, -h*0.4), (-w*0.12, -h*0.26)], 2.4, rgba(60,32,10, 0.6));
+        }
+    }
+    p.restore();
 }
 
 fn draw_sunflower(p: &P, cx: f32, base: f32, t: f32) {
@@ -1107,8 +1171,8 @@ fn draw_card(p: &P, g: &Game, i: usize) {
     if !afford && cd <= 0.0 {
         p.alpha(0.55);
     }
-    p.c.translate((x + w * 0.5) as f64, (y + 57.0) as f64);
-    p.c.scale(0.52, 0.52);
+    p.c.translate((x + w * 0.5) as f64, (y + 59.0) as f64);
+    p.c.scale(0.44, 0.44);
     draw_plant_kind(p, k, 0.0, 0.0, g.time, 1.0, 1.0);
     p.restore();
     p.alpha(1.0);
@@ -1204,42 +1268,21 @@ fn draw_menu(p: &P, g: &Game) {
 
     // 装饰植物（底部草坪）
     for (kind, cx, t) in [
-        (PlantKind::Sunflower, 360.0f32, 1.0f32),
-        (PlantKind::Peashooter, 470.0, 2.0),
-        (PlantKind::WallNut, 585.0, 0.0),
-        (PlantKind::Cherry, 890.0, 3.0),
-        (PlantKind::SnowPea, 1005.0, 1.5),
+        (PlantKind::Sunflower, 130.0f32, 1.0f32),
+        (PlantKind::Peashooter, 270.0, 2.0),
+        (PlantKind::WallNut, 400.0, 0.0),
+        (PlantKind::Cherry, 880.0, 3.0),
+        (PlantKind::SnowPea, 1050.0, 1.5),
     ] {
-        draw_plant_kind(p, kind, cx, 646.0, g.time + t, 1.0, 1.0);
-    }
-
-    // 装饰僵尸
-    for (kind, x, row, t) in [
-        (ZombieKind::Cone, 1120.0f32, 2usize, 0.5f32),
-        (ZombieKind::Bucket, 1200.0, 4, 2.0),
-    ] {
-        let z = Zombie {
-            kind,
-            row,
-            x,
-            hp: 1.0,
-            max_hp: 1.0,
-            speed: 16.0,
-            t,
-            slow: 0.0,
-            eating: false,
-            eat_t: 0.0,
-            dying: false,
-            death_t: 0.0,
-            flash: 0.0,
-            groan: 1.0,
-            hit_flash: 0.0,
-        };
-        draw_zombie(p, &z, g.time);
+        p.save();
+        p.c.translate(cx as f64, 660.0);
+        p.c.scale(0.95, 0.95);
+        draw_plant_kind(p, kind, 0.0, 0.0, g.time + t, 1.0, 1.0);
+        p.restore();
     }
 
     // 阳光
-    for (x, y, t) in [(1005.0f32, 190.0f32, 0.0f32), (940.0f32, 570.0f32, 2.0f32)] {
+    for (x, y, t) in [(1005.0f32, 190.0f32, 0.0f32), (820.0f32, 640.0f32, 2.0f32)] {
         let s = Sun {
             x,
             y,
@@ -1303,7 +1346,7 @@ fn draw_menu(p: &P, g: &Game) {
     );
 
     p.text(
-        "Rust + WebAssembly ｜ Canvas 2D ｜ 所有画面均由代码实时绘制",
+        "Rust + WebAssembly ｜ 正版植物立绘与原声素材 ｜ Canvas 2D",
         W * 0.5,
         706.0,
         13.0,

@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
 <title>植物大战僵尸 · Rust 重制版</title>
-<meta name="description" content="用 Rust + WebAssembly 重写的植物大战僵尸，所有美术由 Canvas 2D 代码实时绘制。" />
+<meta name="description" content="用 Rust + WebAssembly 重写的植物大战僵尸，使用正版植物立绘与音效素材，可直接在浏览器游玩。" />
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
@@ -71,7 +71,7 @@
 
 <div id="loader">
   <div class="sun"></div>
-  <p>正在唤醒草坪…</p>
+  <p>正在加载原版素材…</p>
   <small>Rust + WebAssembly</small>
 </div>
 <div id="err"></div>
@@ -81,6 +81,72 @@
 
   const canvas = document.getElementById('game');
   const frame = document.getElementById('frame');
+
+  // ---- 原版素材预加载：植物立绘 + 音效 ----
+  const IMG_SRC = {
+    sunflower: './assets/plants/sunflower.png',
+    peashooter: './assets/plants/peashooter.png',
+    repeater: './assets/plants/repeater.png',
+    wallnut: './assets/plants/wallnut.png',
+    cherrybomb: './assets/plants/cherrybomb.png',
+    snowpea: './assets/plants/snowpea.png',
+  };
+  const SFX_SRC = {
+    click: './assets/audio/click.mp3',
+    sun: './assets/audio/sun.mp3',
+    plant: './assets/audio/plant.mp3',
+    pause: './assets/audio/pause.mp3',
+    wave: './assets/audio/wave.mp3',
+    win: './assets/audio/win.mp3',
+    lose: './assets/audio/lose.mp3',
+    points: './assets/audio/points.mp3',
+  };
+  window.__pvzAssets = {};
+  const sfxCache = {};
+  window.__pvzSfx = (name) => {
+    const src = SFX_SRC[name];
+    if (!src) return false;
+    try {
+      let a = sfxCache[name];
+      if (!a) {
+        a = new Audio(src);
+        a.preload = 'auto';
+        sfxCache[name] = a;
+      }
+      a.currentTime = 0;
+      a.play().catch(() => {});
+      return true;
+    } catch (e) {
+      return false;
+    }
+  };
+  let bgm = null;
+  window.__pvzMusic = (on) => {
+    try {
+      if (!bgm) {
+        bgm = new Audio('./assets/audio/music.mp3');
+        bgm.loop = true;
+        bgm.volume = 0.3;
+      }
+      if (on) bgm.play().catch(() => {});
+      else bgm.pause();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  };
+  const loadingText = document.querySelector('#loader p');
+  const loadOne = (key, src) =>
+    new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        window.__pvzAssets[key] = img;
+        resolve();
+      };
+      img.onerror = () => resolve();
+      img.src = src;
+    });
+  await Promise.all(Object.entries(IMG_SRC).map(([k, v]) => loadOne(k, v)));
 
   function fit() {
     const pad = window.innerWidth > 900 ? 18 : 0;

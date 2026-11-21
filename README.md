@@ -1,6 +1,6 @@
 # 植物大战僵尸 · Rust 重制版
 
-用 Rust 重写《植物大战僵尸》的经典草坪关卡，编译成 WebAssembly，在浏览器里直接用 Canvas 2D 实时绘制——**没有任何贴图资源**，房子、草坪、植物、僵尸、阳光全部由代码画出来。
+用 Rust 重写《植物大战僵尸》的经典草坪关卡，编译成 WebAssembly，在浏览器里直接游玩。植物立绘、卡片图标、菜单装饰与音效音乐使用授权原版素材；草坪、房子、僵尸、阳光与粒子由 Canvas 2D 代码绘制。
 
 在线试玩：<https://nana-smy.github.io/pvz-rs/>
 
@@ -38,8 +38,9 @@
 
 - **Rust** 负责全部游戏逻辑（状态机、波次、碰撞、经济、音效触发）
 - **wasm-bindgen + web-sys** 做浏览器绑定
-- **Canvas 2D** 纯代码绘制，没有 WebGL 依赖
-- **WebAudio** 振荡器实时合成音效
+- **Canvas 2D** 渲染，无 WebGL 依赖
+- **原版素材**：`assets/plants/` 六种植物立绘，`assets/audio/` 阳光/种植/按钮/波次/胜负/暂停音效与循环 BGM（经素材提供方授权使用）
+- **WebAudio** 作为缺失音效时的合成回退
 - 逻辑分辨率 1280×720，页面按 16:9 等比缩放，支持窗口尺寸变化
 
 项目结构：
@@ -47,10 +48,12 @@
 ```
 src/defs.rs     常量、数值、UI 布局
 src/game.rs     游戏状态机与全部玩法逻辑
-src/render.rs   Canvas 2D 绘制
-src/sfx.rs      WebAudio 合成音效
+src/render.rs   Canvas 2D 绘制（优先绘制原版植物立绘）
+src/assets.rs   原版图片资源句柄
+src/sfx.rs      原版音效播放 + WebAudio 合成回退
 src/main.rs     wasm 入口、输入事件、requestAnimationFrame 主循环
-web/index.html  页面外壳、加载动画、等比缩放
+web/index.html  页面外壳、素材预加载、等比缩放
+assets/         授权原版植物立绘与音效
 ```
 
 ## 本地运行
@@ -69,6 +72,10 @@ python3 -m http.server 8765 --directory dist
 
 仓库已配置 `.github/workflows/pages.yml`：推送到 `main` 后自动编译 wasm、生成 `dist/` 并发布到 GitHub Pages（Source 选 GitHub Actions）。也可以在仓库 Settings → Pages 里手动触发 workflow。
 
+## 素材说明
+
+`assets/plants/` 与 `assets/audio/` 为素材提供方授权使用的《植物大战僵尸》原版资源，仅用于本项目展示；版权归原权利人所有。素材包内没有普通/路障/铁桶/旗帜僵尸的完整动画帧或全尸立绘，因此僵尸仍由代码绘制。
+
 ## License
 
-MIT
+代码 MIT；美术与音频素材版权归原权利人。

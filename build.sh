@@ -10,5 +10,6 @@ wasm-bindgen target/wasm32-unknown-unknown/release/pvz-rs.wasm \
   --target web --out-dir dist --out-name pvz_rs --no-typescript
 
 cp web/index.html dist/index.html
+cp -r assets dist/assets
 touch dist/.nojekyll
 echo "built -> dist/  (本地预览: python3 -m http.server 8765 --directory dist)"

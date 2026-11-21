@@ -184,6 +184,10 @@ pub fn render(g: &Game, ctx: &CanvasRenderingContext2d) {
     if g.shake > 0.0 {
         p.restore();
     }
+    let (tr, tg, tb, ta) = g.cfg.tint;
+    if ta > 0.0 {
+        p.rect(0.0, HUD_H, W, H - HUD_H, rgba(tr, tg, tb, ta));
+    }
     draw_hud(&p, g);
     match g.state {
         State::Paused => draw_pause(&p, g),
@@ -510,6 +514,10 @@ fn art_of(kind: PlantKind) -> Option<Art> {
         PlantKind::Repeater => Some(Art::Repeater),
         PlantKind::WallNut => Some(Art::Wallnut),
         PlantKind::Cherry => Some(Art::Cherry),
+        PlantKind::PotatoMine => Some(Art::PotatoMine),
+        PlantKind::Jalapeno => Some(Art::Jalapeno),
+        PlantKind::Threepeater => Some(Art::Threepeater),
+        PlantKind::Squash => Some(Art::Squash),
     }
 }
 
@@ -527,6 +535,41 @@ fn draw_plant_kind(p: &P, kind: PlantKind, cx: f32, base: f32, t: f32, hp: f32, 
         PlantKind::Repeater => draw_peashooter(p, cx, base, t, 2.0),
         PlantKind::WallNut => draw_wallnut(p, cx, base, t, hp),
         PlantKind::Cherry => draw_cherry(p, cx, base, t, fuse),
+        PlantKind::PotatoMine => {
+            p.save();
+            p.c.translate(cx as f64, base as f64);
+            p.ell(0.0, -12.0, 28.0, 18.0, "#c99655");
+            p.ell(-8.0, -18.0, 8.0, 5.0, "#e0b070");
+            p.circle(-8.0, -16.0, 3.0, "#33220f");
+            p.circle(9.0, -16.0, 3.0, "#33220f");
+            p.rect(-2.0, -44.0, 4.0, 18.0, "#888");
+            p.circle(0.0, -46.0, 8.0, if fuse > 0.5 { "#c33" } else { "#ff3b3b" });
+            p.restore();
+        }
+        PlantKind::Jalapeno => {
+            p.save();
+            p.c.translate(cx as f64, base as f64);
+            p.ell(0.0, -50.0, 18.0, 48.0, "#d8321f");
+            p.poly(&[(-8.0, -92.0), (8.0, -92.0), (14.0, -104.0)], "#3f8f2a");
+            p.circle(-6.0, -58.0, 4.0, "#fff");
+            p.circle(8.0, -74.0, 4.0, "#fff");
+            p.restore();
+        }
+        PlantKind::Threepeater => {
+            for (i, dy) in [-26.0f32, 0.0, 26.0].iter().enumerate() {
+                draw_peashooter(p, cx, base + *dy, t, 0.0);
+                let _ = i;
+            }
+        }
+        PlantKind::Squash => {
+            p.save();
+            p.c.translate(cx as f64, base as f64);
+            p.ell(0.0, -30.0, 30.0, 34.0, "#b6c94c");
+            p.ell(-10.0, -42.0, 4.0, 5.0, "#2b3a12");
+            p.ell(10.0, -42.0, 4.0, 5.0, "#2b3a12");
+            p.arcw(0.0, -32.0, 10.0, 0.2 * PI as f32, 0.8 * PI as f32, 2.4, "#66701f");
+            p.restore();
+        }
     }
 }
 
@@ -544,6 +587,10 @@ fn draw_art_plant(p: &P, kind: PlantKind, art: Art, cx: f32, base: f32, t: f32, 
         Art::Wallnut => 96.0,
         Art::Cherry => 92.0,
         Art::SnowPea => 108.0,
+        Art::PotatoMine => 62.0,
+        Art::Jalapeno => 94.0,
+        Art::Threepeater => 98.0,
+        Art::Squash => 98.0,
     };
     let w = h * iw / ih;
     let bob = (t * 2.1).sin() * 1.6;
@@ -554,7 +601,8 @@ fn draw_art_plant(p: &P, kind: PlantKind, art: Art, cx: f32, base: f32, t: f32, 
         1.0
     };
     p.save();
-    p.c.translate(cx as f64, (base + bob) as f64);
+    let yoff = if art == Art::PotatoMine { 8.0 } else { 0.0 };
+    p.c.translate(cx as f64, (base + bob + yoff) as f64);
     p.c.rotate(sway as f64);
     p.c.scale(pulse as f64, pulse as f64);
     let _ = p.c.draw_image_with_html_image_element_and_dw_and_dh(
@@ -845,6 +893,29 @@ fn draw_zombie(p: &P, z: &Zombie, time: f32) {
             );
             p.circle(24.0, -150.0, 3.0, "#e9c46a");
         }
+        ZombieKind::PoleVault => {
+            p.line(&[(26.0, -6.0), (26.0, -120.0)], 4.0, "#b98b4a");
+            p.line(&[(-34.0, -58.0), (30.0, -58.0)], 2.0, "#7d5a2e");
+            p.rr(-19.0, -104.0 + eat_bob, 38.0, 12.0, 5.0, "#e4e8ea");
+            p.rr(-14.0, -78.0 + eat_bob, 28.0, 5.0, 2.0, "#2f6da8");
+        }
+        ZombieKind::ScreenDoor => {
+            p.save();
+            p.c.translate(-34.0, -84.0);
+            p.rr(0.0, 0.0, 22.0, 78.0, 3.0, "#9b6a3a");
+            p.rr_s(0.0, 0.0, 22.0, 78.0, 3.0, 2.0, "#6b4524");
+            p.rr(4.0, 8.0, 14.0, 30.0, 2.0, rgba(180, 220, 235, 0.35));
+            p.circle(17.0, 44.0, 2.5, "#e9c46a");
+            p.restore();
+            p.ell(-8.0, -88.0 + eat_bob, 13.0, 3.0, "#7f8b90");
+        }
+        ZombieKind::Football => {
+            p.rr(-22.0, -116.0 + eat_bob, 44.0, 24.0, 11.0, "#b02a2a");
+            p.rect(-22.0, -104.0 + eat_bob, 44.0, 4.0, "#7d1b1b");
+            p.line(&[(-16.0, -108.0 + eat_bob), (16.0, -108.0 + eat_bob)], 2.0, "#e3c15a");
+            p.rr(-20.0, -72.0, 40.0, 42.0, 8.0, "#7d1b1b");
+            p.rect(-20.0, -56.0, 40.0, 5.0, "#e3c15a");
+        }
         ZombieKind::Basic => {}
     }
 
@@ -1012,7 +1083,7 @@ fn draw_hud(p: &P, g: &Game) {
     p.text(&format!("{}", g.sun), 122.0, 52.0, 26.0, "#4a3010", "right", true);
 
     // 卡片
-    for i in 0..6 {
+    for i in 0..PlantKind::ALL.len() {
         draw_card(p, g, i);
     }
     draw_shovel_card(p, g);
@@ -1024,20 +1095,20 @@ fn draw_hud(p: &P, g: &Game) {
     let label = if g.wave == 0 {
         "僵尸即将到来".to_string()
     } else {
-        format!("第 {} / {} 波", g.wave, TOTAL_WAVES)
+        format!("第 {} / {} 波", g.wave, g.cfg.waves)
     };
-    p.text(&label, wx + 12.0, wy + 20.0, 16.0, "#ffe8ad", "left", true);
+    p.text(&label, wx + 10.0, wy + 20.0, 14.0, "#ffe8ad", "left", true);
     p.text(
         &format!("击杀 {}", g.kills),
-        wx + ww - 12.0,
+        wx + ww - 10.0,
         wy + 20.0,
-        13.0,
+        11.0,
         "#c9e3a4",
         "right",
         false,
     );
     p.rr(wx + 12.0, wy + 42.0, ww - 24.0, 12.0, 6.0, "#0c1c09");
-    let prog = (g.wave as f32 / TOTAL_WAVES as f32).clamp(0.0, 1.0);
+    let prog = (g.wave as f32 / g.cfg.waves as f32).clamp(0.0, 1.0);
     if prog > 0.0 {
         p.rr(wx + 12.0, wy + 42.0, (ww - 24.0) * prog, 12.0, 6.0, "#e9c46a");
         p.rr(wx + 12.0, wy + 42.0, (ww - 24.0) * prog, 5.0, 3.0, "#ffe9ad");
@@ -1122,7 +1193,7 @@ fn draw_hud(p: &P, g: &Game) {
 }
 
 fn hovered_card(g: &Game) -> Option<usize> {
-    for i in 0..6 {
+    for i in 0..PlantKind::ALL.len() {
         if rect_contains(card_rect(i), g.mouse.0, g.mouse.1) {
             return Some(i);
         }
@@ -1171,14 +1242,14 @@ fn draw_card(p: &P, g: &Game, i: usize) {
     if !afford && cd <= 0.0 {
         p.alpha(0.55);
     }
-    p.c.translate((x + w * 0.5) as f64, (y + 59.0) as f64);
-    p.c.scale(0.44, 0.44);
+    p.c.translate((x + w * 0.5) as f64, (y + 57.0) as f64);
+    p.c.scale(0.34, 0.34);
     draw_plant_kind(p, k, 0.0, 0.0, g.time, 1.0, 1.0);
     p.restore();
     p.alpha(1.0);
 
     // 名称与价格
-    p.text(k.name(), x + w * 0.5, y + 64.0, 11.0, "#4d3312", "center", false);
+    p.text(k.name(), x + w * 0.5, y + 63.0, 10.0, "#4d3312", "center", false);
     p.rr(x + w - 30.0, y + 4.0, 26.0, 17.0, 8.0, rgba(90, 60, 20, 0.14));
     p.text(
         &format!("{}", k.cost()),
@@ -1275,8 +1346,8 @@ fn draw_menu(p: &P, g: &Game) {
         (PlantKind::SnowPea, 1050.0, 1.5),
     ] {
         p.save();
-        p.c.translate(cx as f64, 660.0);
-        p.c.scale(0.95, 0.95);
+        p.c.translate(cx as f64, 672.0);
+        p.c.scale(0.86, 0.86);
         draw_plant_kind(p, kind, 0.0, 0.0, g.time + t, 1.0, 1.0);
         p.restore();
     }
@@ -1313,37 +1384,34 @@ fn draw_menu(p: &P, g: &Game) {
     p.rr_s(330.0, 262.0, 620.0, 186.0, 18.0, 2.0, rgba(233, 196, 106, 0.45));
     let lines = [
         ("点击卡片选择植物，再点击草坪种下", "#f3f8e6", 18.0),
-        ("收集阳光：50 阳光种向日葵，100 阳光种豌豆射手", "#f3f8e6", 18.0),
-        ("撑过 10 波僵尸，别让它们走进房子", "#f3f8e6", 18.0),
+        ("新增土豆雷、火爆辣椒、三线射手、窝瓜", "#f3f8e6", 18.0),
+        ("三个关卡：白天 8 波 / 黄昏 10 波 / 夜晚 12 波", "#f3f8e6", 18.0),
         ("空格暂停 · R 重开 · 右键取消选择", "#a9c786", 13.0),
     ];
     for (i, (line, col, size)) in lines.iter().enumerate() {
         p.text(line, W * 0.5, 298.0 + i as f32 * 36.0, *size, col, "center", false);
     }
 
-    // 开始按钮
-    let hover = rect_contains(MENU_BTN, g.mouse.0, g.mouse.1);
-    let by = MENU_BTN.1 + if hover { -2.0 } else { 0.0 };
-    p.rr(MENU_BTN.0, by + 3.0, MENU_BTN.2, MENU_BTN.3, 14.0, rgba(0, 0, 0, 0.3));
-    p.rr(
-        MENU_BTN.0,
-        by,
-        MENU_BTN.2,
-        MENU_BTN.3,
-        14.0,
-        if hover { "#7ec24a" } else { "#63a838" },
-    );
-    p.rr_s(MENU_BTN.0, by, MENU_BTN.2, MENU_BTN.3, 14.0, 3.0, "#cdf39b");
-    p.text_out(
-        "开 始 冒 险",
-        W * 0.5,
-        by + 39.0,
-        30.0,
-        "#ffffff",
-        "#2c4c18",
-        "center",
-        true,
-    );
+    // 关卡选择
+    for i in 0..LEVEL_COUNT {
+        let cfg = level_cfg(i);
+        let r = level_rect(i);
+        let hover = rect_contains(r, g.mouse.0, g.mouse.1);
+        let by = r.1 + if hover { -2.0 } else { 0.0 };
+        p.rr(r.0, by + 3.0, r.2, r.3, 12.0, rgba(0, 0, 0, 0.3));
+        p.rr(r.0, by, r.2, r.3, 12.0, if hover { "#7ec24a" } else { "#5d9c35" });
+        p.rr_s(r.0, by, r.2, r.3, 12.0, 2.5, "#cdf39b");
+        p.text_out(cfg.name, r.0 + r.2 * 0.5, by + 24.0, 20.0, "#ffffff", "#2c4c18", "center", true);
+        p.text(
+            cfg.subtitle,
+            r.0 + r.2 * 0.5,
+            by + 44.0,
+            11.0,
+            rgba(235, 250, 215, 0.9),
+            "center",
+            false,
+        );
+    }
 
     p.text(
         "Rust + WebAssembly ｜ 正版植物立绘与原声素材 ｜ Canvas 2D",

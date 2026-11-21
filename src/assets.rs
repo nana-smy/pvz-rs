@@ -11,15 +11,23 @@ pub enum Art {
     Wallnut = 3,
     Cherry = 4,
     SnowPea = 5,
+    PotatoMine = 6,
+    Jalapeno = 7,
+    Threepeater = 8,
+    Squash = 9,
 }
 
-pub const ALL: [Art; 6] = [
+pub const ALL: [Art; 10] = [
     Art::Sunflower,
     Art::Peashooter,
     Art::Repeater,
     Art::Wallnut,
     Art::Cherry,
     Art::SnowPea,
+    Art::PotatoMine,
+    Art::Jalapeno,
+    Art::Threepeater,
+    Art::Squash,
 ];
 
 impl Art {
@@ -31,6 +39,10 @@ impl Art {
             Art::Wallnut => "wallnut",
             Art::Cherry => "cherrybomb",
             Art::SnowPea => "snowpea",
+            Art::PotatoMine => "potatomine",
+            Art::Jalapeno => "jalapeno",
+            Art::Threepeater => "threepeater",
+            Art::Squash => "squash",
         }
     }
 }

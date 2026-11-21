@@ -201,73 +201,23 @@ pub fn render(g: &Game, ctx: &CanvasRenderingContext2d) {
 }
 
 fn draw_scene(p: &P, g: &Game) {
-    // 基础草地
-    p.rect(0.0, 0.0, W, H, "#4f8c2c");
-
-    // 右侧远处草地（僵尸来的方向）
-    p.rect(GRID_X + COLS as f32 * CELL_W, 0.0, W, H, "#47822a");
-    for i in 0..4 {
-        let x = GRID_X + COLS as f32 * CELL_W + i as f32 * 30.0;
-        p.rect(x, 0.0, 14.0, H, rgba(20, 55, 12, 0.10));
-    }
-
-    // 草坪格子
-    for col in 0..COLS {
-        let c = if col % 2 == 0 { "#85c951" } else { "#77bc44" };
-        p.rect(
-            GRID_X + col as f32 * CELL_W,
-            GRID_Y,
-            CELL_W,
-            CELL_H * ROWS as f32,
-            c,
+    // 原版关卡背景（含房屋、草坪、道路）；未加载时退回程序绘制
+    let bg = assets::bg(g.level);
+    if let Some(img) = bg {
+        p.rect(0.0, 0.0, W, H, "#1a2a12");
+        // 1400×600 素材按高度铺满 HUD 以下区域，左侧房屋对齐，右侧道路自然裁切
+        let _ = p.c.draw_image_with_html_image_element_and_dw_and_dh(
+            &img, 0.0, HUD_H as f64, 1437.0, (H - HUD_H) as f64,
         );
-    }
-    // 横向轻纹理
-    for r in 0..=ROWS {
-        p.rect(
-            GRID_X,
-            GRID_Y + r as f32 * CELL_H - 1.0,
-            COLS as f32 * CELL_W,
-            2.0,
-            rgba(30, 65, 16, 0.10),
-        );
-    }
-    // 细格线，方便定位
-    for i in 0..=COLS {
-        p.rect(GRID_X + i as f32 * CELL_W - 0.5, GRID_Y, 1.0, CELL_H * ROWS as f32, rgba(255, 255, 255, 0.06));
-    }
-    for i in 0..=ROWS {
-        p.rect(GRID_X, GRID_Y + i as f32 * CELL_H - 0.5, COLS as f32 * CELL_W, 1.0, rgba(255, 255, 255, 0.06));
-    }
-
-    // 草叶点缀
-    for i in 0..34 {
-        let x = GRID_X + 14.0 + (i as f32 * 61.7) % (COLS as f32 * CELL_W - 28.0);
-        let y = GRID_Y + 20.0 + (i as f32 * 137.3) % (CELL_H * ROWS as f32 - 30.0);
-        p.line(&[(x, y), (x + 2.5, y - 6.0)], 1.3, rgba(38, 92, 18, 0.14));
-    }
-
-    // 底部草地
-    p.rect(0.0, LAWN_BOTTOM, W, H - LAWN_BOTTOM, "#55962f");
-    p.rect(0.0, LAWN_BOTTOM, W, 4.0, rgba(20, 50, 10, 0.18));
-    for i in 0..30 {
-        let x = 12.0 + i as f32 * 44.0;
-        p.line(&[(x, 704.0), (x + 4.0, 690.0)], 2.0, rgba(30, 80, 15, 0.22));
-    }
-    // 底部野花
-    for (fx, fy) in [(322.0, 700.0), (660.0, 690.0), (1040.0, 702.0), (920.0, 686.0)] {
-        p.circle(fx, fy, 6.0, "#ffffff");
-        p.circle(fx + 8.0, fy - 4.0, 5.0, "#ffe36b");
-        p.circle(fx + 8.0, fy - 4.0, 2.2, "#f4a22c");
-    }
-
-    draw_house(p, g);
-
-    // 顶部篱笆
-    p.rect(300.0, HUD_H, W - 300.0, 8.0, rgba(18, 45, 10, 0.30));
-    for i in 0..44 {
-        let x = 304.0 + i as f32 * 22.0;
-        p.circle(x, HUD_H - 1.0, 8.0, if i % 2 == 0 { "#4a8329" } else { "#3f7523" });
+        // 草坪边缘轻微压暗，增强纵深
+        p.rect(GRID_X, LAWN_BOTTOM, COLS as f32 * CELL_W, 2.0, rgba(20, 45, 10, 0.18));
+    } else {
+        p.rect(0.0, 0.0, W, H, "#4f8c2c");
+        for col in 0..COLS {
+            let c = if col % 2 == 0 { "#85c951" } else { "#77bc44" };
+            p.rect(GRID_X + col as f32 * CELL_W, GRID_Y, CELL_W, CELL_H * ROWS as f32, c);
+        }
+        draw_house(p, g);
     }
 
     // 割草机
@@ -794,6 +744,42 @@ fn draw_shovel_icon(p: &P, x: f32, y: f32, s: f32, rot: f32) {
 fn draw_zombie(p: &P, z: &Zombie, time: f32) {
     let gy = row_ground(z.row) + 2.0;
     p.ell(z.x, gy + 8.0, 26.0, 8.0, rgba(20, 40, 10, 0.22));
+    if let Some(img) = assets::zombie(z.kind as u8) {
+        p.save();
+        p.c.translate(z.x as f64, gy as f64);
+        if z.dying {
+            let k = (z.death_t / 0.8).min(1.0);
+            p.c.rotate((-1.25 * k) as f64);
+            p.alpha(1.0 - k * 0.85);
+        }
+        let walk = (time * 5.6 + z.row as f32 * 1.7 + z.x * 0.02).sin();
+        let bob = walk * 1.4;
+        let lean = if z.eating { -0.05 } else { 0.0 };
+        p.c.rotate(lean as f64);
+        let scale = 0.26;
+        let w = img.width() as f32 * scale;
+        let h = img.height() as f32 * scale;
+        let _ = p.c.draw_image_with_html_image_element_and_dw_and_dh(
+            &img,
+            (-w * 0.5) as f64,
+            (-h + 7.0 + bob) as f64,
+            w as f64,
+            h as f64,
+        );
+        if z.slow > 0.0 {
+            p.rect(-w * 0.42, -h + 8.0, w * 0.84, h - 12.0, rgba(120, 210, 245, 0.22));
+        }
+        if z.flash > 0.0 {
+            p.save();
+            p.alpha((z.flash * 0.38).min(0.38));
+            p.rect(-w * 0.42, -h + 8.0, w * 0.84, h - 12.0, "#ffffff");
+            p.restore();
+            p.alpha(if z.dying { (1.0 - (z.death_t / 0.8).min(1.0) * 0.85).max(0.0) } else { 1.0 });
+        }
+        p.restore();
+        p.alpha(1.0);
+        return;
+    }
 
     p.save();
     p.c.translate(z.x as f64, gy as f64);

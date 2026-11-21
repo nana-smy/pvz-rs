@@ -82,10 +82,16 @@ impl Sfx {
     }
 
     pub fn shoot(&self) {
+        if self.sample("shoot") {
+            return;
+        }
         self.tone(680.0, 320.0, 0.08, OscillatorType::Square, 0.035);
     }
 
     pub fn ice_shoot(&self) {
+        if self.sample("ice_shoot") {
+            return;
+        }
         self.tone(980.0, 520.0, 0.09, OscillatorType::Sine, 0.04);
     }
 
@@ -104,14 +110,23 @@ impl Sfx {
     }
 
     pub fn explode(&self) {
+        if self.sample("explode") {
+            return;
+        }
         self.tone(160.0, 38.0, 0.5, OscillatorType::Sawtooth, 0.11);
     }
 
     pub fn groan(&self) {
+        if self.sample("groan") {
+            return;
+        }
         self.tone(110.0, 78.0, 0.32, OscillatorType::Sawtooth, 0.03);
     }
 
     pub fn mower(&self) {
+        if self.sample("mower") {
+            return;
+        }
         self.tone(160.0, 420.0, 0.35, OscillatorType::Square, 0.06);
     }
 
@@ -137,6 +152,9 @@ impl Sfx {
     }
 
     pub fn bite(&self) {
+        if self.sample("bite") {
+            return;
+        }
         self.tone(150.0, 90.0, 0.05, OscillatorType::Square, 0.02);
     }
 }

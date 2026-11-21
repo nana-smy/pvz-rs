@@ -5,20 +5,20 @@ pub const H: f32 = 720.0;
 pub const ROWS: usize = 5;
 pub const COLS: usize = 9;
 
-pub const GRID_X: f32 = 300.0;
-pub const GRID_Y: f32 = 112.0;
-pub const CELL_W: f32 = 96.0;
-pub const CELL_H: f32 = 100.0;
+pub const GRID_X: f32 = 246.3;
+pub const GRID_Y: f32 = 163.5;
+pub const CELL_W: f32 = 86.4;
+pub const CELL_H: f32 = 106.5;
 
 pub const HUD_H: f32 = 104.0;
-pub const LAWN_BOTTOM: f32 = 612.0;
+pub const LAWN_BOTTOM: f32 = 696.0;
 
 pub const TOTAL_WAVES: u32 = 10;
 pub const FIRST_WAVE_AT: f32 = 25.0;
 pub const WAVE_GAPS: [f32; 9] = [24.0, 23.0, 22.0, 21.0, 21.0, 20.0, 20.0, 19.0, 19.0];
 
-pub const MOWER_X: f32 = 268.0;
-pub const DEATH_X: f32 = 238.0;
+pub const MOWER_X: f32 = 214.0;
+pub const DEATH_X: f32 = 188.0;
 
 // 卡片 HUD 布局
 pub const CARD_X0: f32 = 142.0;
@@ -248,7 +248,7 @@ pub fn level_cfg(i: usize) -> LevelCfg {
             waves: 10,
             first_wave: 22.0,
             gaps: &GAPS_B,
-            tint: (255, 140, 40, 0.18),
+            tint: (0, 0, 0, 0.0),
             pool: &POOL_B,
         },
         2 => LevelCfg {
@@ -258,7 +258,7 @@ pub fn level_cfg(i: usize) -> LevelCfg {
             waves: 12,
             first_wave: 20.0,
             gaps: &GAPS_C,
-            tint: (12, 18, 60, 0.55),
+            tint: (0, 0, 0, 0.0),
             pool: &POOL_C,
         },
         _ => LevelCfg {

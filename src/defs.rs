@@ -248,7 +248,7 @@ pub fn level_cfg(i: usize) -> LevelCfg {
             waves: 10,
             first_wave: 22.0,
             gaps: &GAPS_B,
-            tint: (255, 140, 40, 0.10),
+            tint: (255, 140, 40, 0.18),
             pool: &POOL_B,
         },
         2 => LevelCfg {
@@ -258,7 +258,7 @@ pub fn level_cfg(i: usize) -> LevelCfg {
             waves: 12,
             first_wave: 20.0,
             gaps: &GAPS_C,
-            tint: (16, 24, 70, 0.30),
+            tint: (12, 18, 60, 0.55),
             pool: &POOL_C,
         },
         _ => LevelCfg {

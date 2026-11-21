@@ -172,9 +172,11 @@
         finish();
       };
       img.onerror = finish;
-      img.src = src + '?v=1cd5107';
+      img.src = src + '?v=live701';
     });
-  await Promise.all(Object.entries(IMG_SRC).map(([k, v]) => loadOne(k, v)));
+  // 素材并行加载；最多等 2.5 秒就开始游戏，迟到图片由 Rust 侧按需拾取
+  const allImages = Promise.all(Object.entries(IMG_SRC).map(([k, v]) => loadOne(k, v)));
+  await Promise.race([allImages, new Promise((r) => setTimeout(r, 2500))]);
 
   function fit() {
     const pad = window.innerWidth > 900 ? 18 : 0;

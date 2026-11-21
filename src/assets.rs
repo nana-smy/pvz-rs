@@ -103,14 +103,64 @@ pub fn ready() -> bool {
     IMGS.with(|m| m.borrow().iter().any(|i| i.is_some()))
 }
 
+fn live(key: &str) -> Option<HtmlImageElement> {
+    let window = web_sys::window()?;
+    let obj = js_sys::Reflect::get(&window, &"__pvzAssets".into()).ok()?;
+    if obj.is_undefined() || obj.is_null() {
+        return None;
+    }
+    get_img(&obj, key)
+}
+
 pub fn image(art: Art) -> Option<HtmlImageElement> {
-    IMGS.with(|m| m.borrow().get(art as usize).cloned().flatten())
+    let cached = IMGS.with(|m| m.borrow().get(art as usize).cloned().flatten());
+    if cached.is_some() {
+        return cached;
+    }
+    let got = live(art.key());
+    if let Some(img) = &got {
+        IMGS.with(|m| {
+            if let Some(slot) = m.borrow_mut().get_mut(art as usize) {
+                *slot = Some(img.clone());
+            }
+        });
+    }
+    got
 }
 
 pub fn zombie(kind: u8) -> Option<HtmlImageElement> {
-    ZOMBIES.with(|m| m.borrow().get(kind as usize).cloned().flatten())
+    let idx = kind as usize;
+    if idx >= Z_KEYS.len() {
+        return None;
+    }
+    let cached = ZOMBIES.with(|m| m.borrow().get(idx).cloned().flatten());
+    if cached.is_some() {
+        return cached;
+    }
+    let got = live(Z_KEYS[idx]);
+    if let Some(img) = &got {
+        ZOMBIES.with(|m| {
+            if let Some(slot) = m.borrow_mut().get_mut(idx) {
+                *slot = Some(img.clone());
+            }
+        });
+    }
+    got
 }
 
 pub fn bg(level: usize) -> Option<HtmlImageElement> {
-    BGS.with(|m| m.borrow().get(level.min(2)).cloned().flatten())
+    let idx = level.min(2);
+    let cached = BGS.with(|m| m.borrow().get(idx).cloned().flatten());
+    if cached.is_some() {
+        return cached;
+    }
+    let got = live(BG_KEYS[idx]);
+    if let Some(img) = &got {
+        BGS.with(|m| {
+            if let Some(slot) = m.borrow_mut().get_mut(idx) {
+                *slot = Some(img.clone());
+            }
+        });
+    }
+    got
 }

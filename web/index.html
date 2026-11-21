@@ -71,7 +71,7 @@
 
 <div id="loader">
   <div class="sun"></div>
-  <p>正在加载原版素材…</p>
+  <p>正在加载原版素材（首次约 3–10 秒）…</p>
   <small>Rust + WebAssembly</small>
 </div>
 <div id="err"></div>
@@ -166,13 +166,13 @@
         clearTimeout(timer);
         resolve();
       };
-      const timer = setTimeout(finish, 9000);
+      const timer = setTimeout(finish, 30000);
       img.onload = () => {
         window.__pvzAssets[key] = img;
         finish();
       };
       img.onerror = finish;
-      img.src = src + '?v=581a433';
+      img.src = src + '?v=1cd5107';
     });
   await Promise.all(Object.entries(IMG_SRC).map(([k, v]) => loadOne(k, v)));
 

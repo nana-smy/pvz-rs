@@ -1,0 +1,38 @@
+[package]
+name = "pvz-rs"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+wasm-bindgen = "=0.2.130"
+js-sys = "0.3"
+console_error_panic_hook = "0.1"
+web-sys = { version = "0.3", features = [
+    "Window",
+    "Document",
+    "Element",
+    "HtmlCanvasElement",
+    "HtmlElement",
+    "DomRect",
+    "CanvasRenderingContext2d",
+    "TextMetrics",
+    "PointerEvent",
+    "MouseEvent",
+    "KeyboardEvent",
+    "EventTarget",
+    "AudioContext",
+    "OscillatorNode",
+    "OscillatorType",
+    "GainNode",
+    "AudioParam",
+    "AudioNode",
+    "AudioDestinationNode",
+    "DomTokenList",
+    "console"
+] }
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"

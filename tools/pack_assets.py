@@ -31,11 +31,19 @@ def build(name, base, dirs):
 
 if __name__ == '__main__':
     build_ui = ['bg/day.webp', 'plants/sunflower.webp', 'plants/peashooter.webp', 'plants/wallnut.webp', 'plants/cherrybomb.webp', 'plants/snowpea.webp', 'projectiles/pea.webp']
+    boot_files = ['pvz_rs.js', 'pvz_rs_bg.wasm']
     path = os.path.join(OUT, 'assets-ui.tar')
     with tarfile.open(path, 'w', format=tarfile.USTAR_FORMAT) as tar:
         for rel in build_ui:
             p = os.path.join(ROOT, 'assets-webp', rel)
             ti = tar.gettarinfo(p, arcname='assets/' + rel)
+            ti.uid = ti.gid = 0
+            ti.uname = ti.gname = ''
+            with open(p, 'rb') as fh:
+                tar.addfile(ti, fh)
+        for rel in boot_files:
+            p = os.path.join(OUT, rel)
+            ti = tar.gettarinfo(p, arcname='boot/' + rel)
             ti.uid = ti.gid = 0
             ti.uname = ti.gname = ''
             with open(p, 'rb') as fh:

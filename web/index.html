@@ -352,6 +352,8 @@
     if (/\.jpe?g$/i.test(p)) return 'image/jpeg';
     if (/\.mp3$/i.test(p)) return 'audio/mpeg';
     if (/\.wav$/i.test(p)) return 'audio/wav';
+    if (/\.js$/i.test(p)) return 'text/javascript';
+    if (/\.wasm$/i.test(p)) return 'application/wasm';
     return 'application/octet-stream';
   };
   function untar(buffer) {
@@ -380,7 +382,7 @@
     let lastErr = null;
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        loadingText.textContent = '正在加载首屏素材（约 170KB）…';
+        loadingText.textContent = '正在加载首屏素材（约 420KB）…';
         const r = await fetch(packUrl + '?v=__ASSET_VERSION__&r=' + attempt, { cache: 'force-cache' });
         if (!r.ok) throw new Error('HTTP ' + r.status);
         const buf = await r.arrayBuffer();
@@ -493,14 +495,24 @@
   window.addEventListener('orientationchange', fit);
   fit();
 
-  const mod = await import('./pvz_rs.js');
-  const init = mod.default;
-  init().catch((e) => {
+  const bootJs = packUrls.get('boot/pvz_rs.js');
+  const bootWasm = packUrls.get('boot/pvz_rs_bg.wasm');
+  let mod;
+  try {
+    if (bootJs && bootWasm) {
+      mod = await import(bootJs);
+      const wasmBytes = await (await fetch(bootWasm)).arrayBuffer();
+      await mod.default(wasmBytes);
+    } else {
+      mod = await import('./pvz_rs.js');
+      await mod.default();
+    }
+  } catch (e) {
     console.error(e);
     const el = document.getElementById('err');
     el.style.display = 'block';
     el.textContent = '启动失败：' + (e && e.message ? e.message : e);
-  });
+  }
 </script>
 </body>
 </html>

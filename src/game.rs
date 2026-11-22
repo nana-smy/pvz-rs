@@ -1082,11 +1082,12 @@ impl Game {
     fn start_wave(&mut self) {
         self.wave += 1;
         let w = self.wave;
-        let counts = [2u32, 3, 4, 5, 8, 9, 10, 11, 12, 15];
-        let base = counts[(w - 1) as usize % 10] as f32;
-        let count = (base * (self.cfg.waves as f32 / 10.0) + 1.0).round() as u32;
+        let counts = [1u32, 1, 1, 2, 2, 3, 3, 4, 5, 6];
+        let base = counts[(w - 1) as usize % 10];
+        let count = base + u32::from(w == self.cfg.waves);
         let mut items: Vec<(f32, ZombieKind, usize)> = Vec::new();
-        if w == 5 || w == self.cfg.waves {
+        let mid = self.cfg.waves / 2 + 1;
+        if w == mid || w == self.cfg.waves {
             items.push((0.2, ZombieKind::Flag, self.rng.range(ROWS)));
         }
         for i in 0..count {
@@ -1108,7 +1109,7 @@ impl Game {
         }
         let text = if w == self.cfg.waves {
             "最后一大波僵尸来袭！"
-        } else if w == 5 {
+        } else if w == mid {
             "一大波僵尸正在接近！"
         } else {
             "第 %d 波僵尸来袭"
@@ -1119,7 +1120,7 @@ impl Game {
             text.to_string()
         };
         self.banner = Some((text, 2.8));
-        if w == 5 || w == self.cfg.waves {
+        if w == mid || w == self.cfg.waves {
             self.sfx.horn();
         }
         self.next_wave_at = if w >= self.cfg.waves {

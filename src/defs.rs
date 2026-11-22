@@ -255,9 +255,9 @@ pub struct LevelCfg {
     pub seed_hint: &'static str,
 }
 
-static GAPS_A: [f32; 7] = [23.0, 22.0, 21.0, 20.0, 20.0, 19.0, 18.0];
-static GAPS_B: [f32; 9] = [22.0, 21.0, 20.0, 20.0, 19.0, 19.0, 18.0, 18.0, 17.0];
-static GAPS_C: [f32; 11] = [21.0, 20.0, 20.0, 19.0, 19.0, 18.0, 18.0, 17.0, 17.0, 16.0, 16.0];
+static GAPS_A: [f32; 7] = [30.0, 28.0, 26.0, 24.0, 22.0, 20.0, 18.0];
+static GAPS_B: [f32; 9] = [28.0, 26.0, 24.0, 23.0, 22.0, 21.0, 20.0, 19.0, 18.0];
+static GAPS_C: [f32; 11] = [26.0, 25.0, 24.0, 23.0, 22.0, 21.0, 20.0, 19.0, 18.0, 17.0, 16.0];
 static POOL_A: [ZombieKind; 2] = [ZombieKind::Basic, ZombieKind::Cone];
 static POOL_B: [ZombieKind; 4] = [
     ZombieKind::Basic,
@@ -320,9 +320,9 @@ pub fn level_cfg(i: usize) -> LevelCfg {
         1 => LevelCfg {
             name: "黄昏 · 前院",
             subtitle: "更多铁桶与铁门僵尸",
-            sun: 75,
-            waves: 10,
-            first_wave: 22.0,
+            sun: 90,
+            waves: 7,
+            first_wave: 28.0,
             gaps: &GAPS_B,
             tint: (0, 0, 0, 0.0),
             pool: &POOL_B,
@@ -333,9 +333,9 @@ pub fn level_cfg(i: usize) -> LevelCfg {
         2 => LevelCfg {
             name: "夜晚 · 前院",
             subtitle: "撑杆跳、橄榄球僵尸来袭",
-            sun: 50,
-            waves: 12,
-            first_wave: 20.0,
+            sun: 100,
+            waves: 8,
+            first_wave: 26.0,
             gaps: &GAPS_C,
             tint: (0, 0, 0, 0.0),
             pool: &POOL_C,
@@ -346,9 +346,9 @@ pub fn level_cfg(i: usize) -> LevelCfg {
         _ => LevelCfg {
             name: "白天 · 前院",
             subtitle: "适应草坪与阳光节奏",
-            sun: 50,
-            waves: 8,
-            first_wave: 24.0,
+            sun: 75,
+            waves: 6,
+            first_wave: 30.0,
             gaps: &GAPS_A,
             tint: (0, 0, 0, 0.0),
             pool: &POOL_A,

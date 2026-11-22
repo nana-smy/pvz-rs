@@ -142,7 +142,7 @@ pub struct Game {
     pub mouse: (f32, f32),
     pub sun: i32,
     pub sun_pop: f32,
-    pub cooldowns: [f32; 14],
+    pub cooldowns: [f32; 16],
     pub seeds: Vec<PlantKind>,
     pub selected: Option<PlantKind>,
     pub shovel: bool,
@@ -202,6 +202,10 @@ fn part(
 }
 
 impl Game {
+    pub fn rows(&self) -> usize { rows_for(self.cfg.terrain) }
+    pub fn cell_h(&self) -> f32 { cell_h_for(self.cfg.terrain) }
+    pub fn cell_center(&self, row: usize, col: usize) -> (f32, f32) { crate::defs::cell_center(row, col, self.cell_h()) }
+    pub fn row_ground(&self, row: usize) -> f32 { crate::defs::row_ground(row, self.cell_h()) }
     pub fn new() -> Self {
         Self {
             state: State::Menu,
@@ -210,7 +214,7 @@ impl Game {
             mouse: (0.0, 0.0),
             sun: 150,
             sun_pop: 0.0,
-            cooldowns: [0.0; 14],
+            cooldowns: [0.0; 16],
             seeds: Vec::new(),
             selected: None,
             shovel: false,
@@ -281,7 +285,7 @@ impl Game {
         self.elapsed = 0.0;
         self.sun = self.cfg.sun;
         self.sun_pop = 0.0;
-        self.cooldowns = [0.0; 14];
+        self.cooldowns = [0.0; 16];
         self.selected = None;
         self.shovel = false;
         self.plants.clear();
@@ -291,7 +295,7 @@ impl Game {
         self.particles.clear();
         self.pending.clear();
         self.mowers.clear();
-        for r in 0..ROWS {
+        for r in 0..self.rows() {
             self.mowers.push(Mower {
                 row: r,
                 x: MOWER_X,
@@ -428,6 +432,8 @@ impl Game {
         let mut squash_hits: Vec<(f32, usize)> = Vec::new();
         let mut mine_hits: Vec<(f32, usize)> = Vec::new();
         let mut spike_ticks: Vec<(f32, usize)> = Vec::new();
+        let h = self.cell_h();
+        let rows = self.rows();
         {
             let plants = &mut self.plants;
             let zombies = &self.zombies;
@@ -442,9 +448,10 @@ impl Game {
                 if p.pop < 1.0 {
                     p.pop = (p.pop + dt * 3.5).min(1.0);
                 }
-                let (cx, _cy) = cell_center(p.row, p.col);
-                let gy = row_ground(p.row);
+                let (cx, _cy) = cell_center(p.row, p.col, h);
+                let gy = row_ground(p.row, h);
                 match p.kind {
+                    PlantKind::LilyPad | PlantKind::FlowerPot => {}
                     PlantKind::Sunflower => {
                         p.timer -= dt;
                         if p.timer <= 0.0 {
@@ -460,10 +467,10 @@ impl Game {
                         if has_target && p.timer <= 0.0 {
                             p.timer = 1.5;
                             for dr in -1i32..=1 {
-                                let r = (p.row as i32 + dr).clamp(0, ROWS as i32 - 1) as usize;
+                                let r = (p.row as i32 + dr).clamp(0, rows as i32 - 1) as usize;
                                 peas.push(Pea {
                                     x: cx + 34.0,
-                                    y: row_ground(r) - 52.0,
+                                    y: row_ground(r, h) - 52.0,
                                     row: r,
                                     dmg: 20.0,
                                     slow: false,
@@ -594,10 +601,10 @@ impl Game {
                             p.timer = 1.5;
                             p.anim = 0.16;
                             for dr in -1i32..=1 {
-                                let r = (p.row as i32 + dr).clamp(0, ROWS as i32 - 1) as usize;
+                                let r = (p.row as i32 + dr).clamp(0, rows as i32 - 1) as usize;
                                 peas.push(Pea {
                                     x: cx,
-                                    y: row_ground(r) - 48.0,
+                                    y: row_ground(r, h) - 48.0,
                                     row: r,
                                     dmg: 20.0,
                                     slow: false,
@@ -704,7 +711,7 @@ impl Game {
                 let x = GRID_X + (k as f32 / 26.0) * COLS as f32 * CELL_W;
                 self.particles.push(part(
                     x,
-                    row_ground(row) - 30.0,
+                    row_ground(row, h) - 30.0,
                     0.0,
                     -60.0,
                     0.7,
@@ -719,7 +726,7 @@ impl Game {
             self.sfx.explode();
         }
         for (x, row) in mine_hits {
-            let gy = row_ground(row) - 8.0;
+            let gy = row_ground(row, h) - 8.0;
             for z in self.zombies.iter_mut() {
                 if z.row == row && !z.dying && (z.x - x).abs() < 96.0 {
                     hurt_zombie(z, 9000.0);
@@ -787,7 +794,7 @@ impl Game {
                     let a = self.rng.f(0.0, std::f32::consts::TAU);
                     self.particles.push(part(
                         x + self.rng.f(-28.0, 28.0),
-                        row_ground(row) - 6.0,
+                        row_ground(row, h) - 6.0,
                         a.cos() * 35.0,
                         -40.0 + k as f32 * 8.0,
                         0.28,
@@ -824,7 +831,7 @@ impl Game {
         if !dead.is_empty() {
             for i in dead.iter().rev() {
                 let p = self.plants.remove(*i);
-                let (x, y) = cell_center(p.row, p.col);
+                let (x, y) = cell_center(p.row, p.col, h);
                 for _ in 0..8 {
                     self.particles.push(part(
                         x + self.rng.f(-24.0, 24.0),
@@ -908,6 +915,8 @@ impl Game {
     }
 
     fn update_zombies(&mut self, dt: f32) {
+        let h = self.cell_h();
+        let rows = self.rows();
         let plants = &mut self.plants;
         let zombies = &mut self.zombies;
         let particles = &mut self.particles;
@@ -936,19 +945,29 @@ impl Game {
             }
             let mouth = z.x - 22.0;
             let mut target: Option<usize> = None;
+            let mut base_target: Option<usize> = None;
             for (pi, p) in plants.iter().enumerate() {
-                if p.row == z.row && p.hp > 0.0 && p.kind != PlantKind::Spikeweed {
-                    let px = GRID_X + p.col as f32 * CELL_W + 12.0;
-                    if mouth > px && mouth < px + CELL_W - 12.0 {
-                        target = Some(pi);
-                        break;
-                    }
+                if p.row != z.row || p.hp <= 0.0 || p.kind == PlantKind::Spikeweed {
+                    continue;
                 }
+                let px = GRID_X + p.col as f32 * CELL_W + 12.0;
+                if mouth <= px || mouth >= px + CELL_W - 12.0 {
+                    continue;
+                }
+                if p.kind.is_base() {
+                    base_target.get_or_insert(pi);
+                } else {
+                    target = Some(pi);
+                    break;
+                }
+            }
+            if target.is_none() {
+                target = base_target;
             }
             if let Some(pi) = target {
                 if plants[pi].kind == PlantKind::Garlic && !z.diverted {
                     z.diverted = true;
-                    let nr = if z.row + 1 < ROWS { z.row + 1 } else { z.row.saturating_sub(1) };
+                    let nr = if z.row + 1 < rows { z.row + 1 } else { z.row.saturating_sub(1) };
                     z.row = nr;
                     z.x += 24.0;
                     z.eating = false;
@@ -1000,7 +1019,7 @@ impl Game {
         if !zombies.is_empty() {
             for z in zombies.iter() {
                 if z.dying && z.death_t < 0.02 {
-                    let gy = row_ground(z.row);
+                    let gy = row_ground(z.row, h);
                     for _ in 0..6 {
                         particles.push(part(
                             z.x + rng_r(-14.0, 14.0),
@@ -1020,6 +1039,7 @@ impl Game {
     }
 
     fn update_mowers(&mut self, dt: f32) {
+        let h = self.cell_h();
         let mowers = &mut self.mowers;
         let zombies = &mut self.zombies;
         let particles = &mut self.particles;
@@ -1050,7 +1070,7 @@ impl Game {
                         for _ in 0..7 {
                             particles.push(part(
                                 z.x,
-                                row_ground(row) - 40.0,
+                                row_ground(row, h) - 40.0,
                                 rng_r(-30.0, 30.0),
                                 rng_r(-90.0, -30.0),
                                 0.6,
@@ -1144,9 +1164,9 @@ impl Game {
             let plain = budget.min(8);
             for _ in 0..plain {
                 budget -= ZombieKind::Basic.wave_value();
-                items.push((self.rng.f(0.1, 0.6), ZombieKind::Basic, self.rng.range(ROWS)));
+                items.push((self.rng.f(0.1, 0.6), ZombieKind::Basic, self.rng.range(self.rows())));
             }
-            items.push((0.2, ZombieKind::Flag, self.rng.range(ROWS)));
+            items.push((0.2, ZombieKind::Flag, self.rng.range(self.rows())));
         }
 
         while budget > 0 {
@@ -1154,7 +1174,7 @@ impl Game {
                 break;
             };
             let idx = items.len();
-            items.push((0.15 + idx as f32 * 0.42 + self.rng.f(0.0, 0.9), kind, self.rng.range(ROWS)));
+            items.push((0.15 + idx as f32 * 0.42 + self.rng.f(0.0, 0.9), kind, self.rng.range(self.rows())));
         }
 
         // 冒险关末波补齐本关允许但还没出场的僵尸，和原版 PutInMissingZombies 一致。
@@ -1162,7 +1182,7 @@ impl Game {
             for &kind in self.cfg.pool {
                 if !items.iter().any(|(_, k, _)| *k == kind) {
                     let idx = items.len();
-                    items.push((0.2 + idx as f32 * 0.45 + self.rng.f(0.0, 0.6), kind, self.rng.range(ROWS)));
+                    items.push((0.2 + idx as f32 * 0.45 + self.rng.f(0.0, 0.6), kind, self.rng.range(self.rows())));
                 }
             }
         }
@@ -1399,13 +1419,18 @@ impl Game {
                 // 草坪
                 if let Some((row, col)) = self.grid_at(x, y) {
                     if self.shovel {
-                        if let Some(i) = self
+                        let top = self
                             .plants
                             .iter()
-                            .position(|p| p.row == row && p.col == col)
-                        {
+                            .position(|p| p.row == row && p.col == col && !p.kind.is_base())
+                            .or_else(|| {
+                                self.plants
+                                    .iter()
+                                    .position(|p| p.row == row && p.col == col && p.kind.is_base())
+                            });
+                        if let Some(i) = top {
                             let p = self.plants.remove(i);
-                            let (cx, cy) = cell_center(row, col);
+                            let (cx, cy) = self.cell_center(row, col);
                             for _ in 0..8 {
                                 self.particles.push(part(
                                     cx + self.rng.f(-20.0, 20.0),
@@ -1425,8 +1450,8 @@ impl Game {
                         return;
                     }
                     if let Some(k) = self.selected {
-                        if self.plants.iter().any(|p| p.row == row && p.col == col) {
-                            self.toast = Some(("这里已经有植物了".into(), 1.0, true));
+                        if let Err(msg) = self.can_place(k, row, col) {
+                            self.toast = Some((msg.into(), 1.2, true));
                         } else if self.sun < k.cost() {
                             self.toast = Some(("阳光不足".into(), 1.2, true));
                         } else if self.cooldowns[k.idx()] > 0.0 {
@@ -1461,8 +1486,49 @@ impl Game {
         }
     }
 
+    fn cell_base(&self, row: usize, col: usize) -> Option<PlantKind> {
+        self.plants
+            .iter()
+            .find(|p| p.row == row && p.col == col && p.kind.is_base())
+            .map(|p| p.kind)
+    }
+
+    fn cell_normal(&self, row: usize, col: usize) -> bool {
+        self.plants
+            .iter()
+            .any(|p| p.row == row && p.col == col && !p.kind.is_base())
+    }
+
+    pub fn can_place(&self, kind: PlantKind, row: usize, col: usize) -> Result<(), &'static str> {
+        let base = self.cell_base(row, col);
+        let normal = self.cell_normal(row, col);
+        if kind.is_base() {
+            if base.is_some() || normal {
+                return Err("这里已经有植物了");
+            }
+            return match self.cfg.terrain {
+                Terrain::Pool if is_water_row(self.cfg.terrain, row) => Ok(()),
+                Terrain::Pool => Err("睡莲只能种在水面上"),
+                Terrain::Roof => Ok(()),
+                Terrain::Lawn => Err("这种地形不需要底座"),
+            };
+        }
+        if normal {
+            return Err("这里已经有植物了");
+        }
+        match self.cfg.terrain {
+            Terrain::Pool if is_water_row(self.cfg.terrain, row) => {
+                if base == Some(PlantKind::LilyPad) { Ok(()) } else { Err("水面上需要先种睡莲") }
+            }
+            Terrain::Roof => {
+                if base == Some(PlantKind::FlowerPot) { Ok(()) } else { Err("屋顶上需要先放花盆") }
+            }
+            _ => Ok(()),
+        }
+    }
+
     fn plant_at(&mut self, kind: PlantKind, row: usize, col: usize) {
-        let (cx, cy) = cell_center(row, col);
+        let (cx, cy) = self.cell_center(row, col);
         self.plants.push(Plant {
             kind,
             row,
@@ -1510,12 +1576,12 @@ impl Game {
     }
 
     pub fn grid_at(&self, x: f32, y: f32) -> Option<(usize, usize)> {
-        if x < GRID_X || y < GRID_Y || x >= GRID_X + COLS as f32 * CELL_W || y >= GRID_Y + ROWS as f32 * CELL_H {
+        if x < GRID_X || y < GRID_Y || x >= GRID_X + COLS as f32 * CELL_W || y >= GRID_Y + self.rows() as f32 * self.cell_h() {
             return None;
         }
         let col = ((x - GRID_X) / CELL_W) as usize;
-        let row = ((y - GRID_Y) / CELL_H) as usize;
-        if row < ROWS && col < COLS {
+        let row = ((y - GRID_Y) / self.cell_h()) as usize;
+        if row < self.rows() && col < COLS {
             Some((row, col))
         } else {
             None

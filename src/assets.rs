@@ -19,9 +19,11 @@ pub enum Art {
     Starfruit = 11,
     Garlic = 12,
     Spikeweed = 13,
+    LilyPad = 14,
+    FlowerPot = 15,
 }
 
-pub const ALL: [Art; 14] = [
+pub const ALL: [Art; 16] = [
     Art::Sunflower,
     Art::Peashooter,
     Art::Repeater,
@@ -36,6 +38,8 @@ pub const ALL: [Art; 14] = [
     Art::Starfruit,
     Art::Garlic,
     Art::Spikeweed,
+    Art::LilyPad,
+    Art::FlowerPot,
 ];
 
 impl Art {
@@ -55,6 +59,8 @@ impl Art {
             Art::Starfruit => "starfruit",
             Art::Garlic => "garlic",
             Art::Spikeweed => "spikeweed",
+            Art::LilyPad => "lilypad",
+            Art::FlowerPot => "flowerpot",
         }
     }
 }
@@ -197,7 +203,7 @@ const Z_KEYS: [&str; 128] = [
     "z_ladder_14",
     "z_ladder_15",
 ];
-const BG_KEYS: [&str; 3] = ["bg_day", "bg_dusk", "bg_night"];
+const BG_KEYS: [&str; 6] = ["bg_day", "bg_dusk", "bg_night", "bg_pool", "bg_pool_night", "bg_roof"];
 const PROJ_KEYS: [&str; 2] = ["pea", "pea_ice"];
 
 fn get_img(obj: &JsValue, key: &str) -> Option<HtmlImageElement> {
@@ -279,7 +285,7 @@ pub fn plant_sheet(art: Art, shoot: bool) -> Option<HtmlImageElement> {
     if clip.key.is_empty() || clip.frames == 0 {
         return None;
     }
-    let idx = base + if shoot { 14 } else { 0 };
+    let idx = base + if shoot { 16 } else { 0 };
     let cached = SHEETS.with(|m| m.borrow().get(idx).cloned().flatten());
     if cached.is_some() {
         return cached;
@@ -288,8 +294,8 @@ pub fn plant_sheet(art: Art, shoot: bool) -> Option<HtmlImageElement> {
     if let Some(img) = &got {
         SHEETS.with(|m| {
             let mut v = m.borrow_mut();
-            if v.len() < 29 {
-                v.resize(29, None);
+            if v.len() < 33 {
+                v.resize(33, None);
             }
             v[idx] = Some(img.clone());
         });
@@ -298,13 +304,13 @@ pub fn plant_sheet(art: Art, shoot: bool) -> Option<HtmlImageElement> {
 }
 
 pub fn plant_rise() -> Option<HtmlImageElement> {
-    let idx = 28;
+    let idx = 32;
     let cached = SHEETS.with(|m| m.borrow().get(idx).cloned().flatten());
     if cached.is_some() { return cached; }
     let clip = crate::plant_anim::RISE_POTATO;
     let got = live(clip.key);
     if let Some(img) = &got {
-        SHEETS.with(|m| { let mut v = m.borrow_mut(); if v.len() < 29 { v.resize(29, None); } v[idx] = Some(img.clone()); });
+        SHEETS.with(|m| { let mut v = m.borrow_mut(); if v.len() < 33 { v.resize(33, None); } v[idx] = Some(img.clone()); });
     }
     got
 }
@@ -345,13 +351,21 @@ pub fn zombie(kind: u8, frame: u8) -> Option<HtmlImageElement> {
     got
 }
 
+pub fn water() -> Option<HtmlImageElement> {
+    live("water")
+}
+
+pub fn fog() -> Option<HtmlImageElement> {
+    live("fog")
+}
+
 pub fn bg(level: usize) -> Option<HtmlImageElement> {
     let idx = match (level / 10).min(4) {
-        0 => 0, // 白天
-        1 => 2, // 夜晚
-        2 => 0, // 泳池
-        3 => 2, // 浓雾
-        _ => 1, // 屋顶黄昏
+        0 => 0, // 白天前院
+        1 => 2, // 夜晚前院
+        2 => 3, // 白天泳池
+        3 => 4, // 夜晚泳池 · 浓雾
+        _ => 5, // 屋顶
     };
     let cached = BGS.with(|m| m.borrow().get(idx).cloned().flatten());
     if cached.is_some() {

@@ -66,10 +66,12 @@ pub enum PlantKind {
     Starfruit,
     Garlic,
     Spikeweed,
+    LilyPad,
+    FlowerPot,
 }
 
 impl PlantKind {
-    pub const ALL: [PlantKind; 14] = [
+    pub const ALL: [PlantKind; 16] = [
         PlantKind::Sunflower,
         PlantKind::Peashooter,
         PlantKind::WallNut,
@@ -84,6 +86,8 @@ impl PlantKind {
         PlantKind::Starfruit,
         PlantKind::Garlic,
         PlantKind::Spikeweed,
+        PlantKind::LilyPad,
+        PlantKind::FlowerPot,
     ];
 
     pub fn idx(self) -> usize {
@@ -102,7 +106,13 @@ impl PlantKind {
             PlantKind::Starfruit => 11,
             PlantKind::Garlic => 12,
             PlantKind::Spikeweed => 13,
+            PlantKind::LilyPad => 14,
+            PlantKind::FlowerPot => 15,
         }
+    }
+
+    pub fn is_base(self) -> bool {
+        matches!(self, PlantKind::LilyPad | PlantKind::FlowerPot)
     }
 
     pub fn cost(self) -> i32 {
@@ -121,6 +131,8 @@ impl PlantKind {
             PlantKind::Starfruit => 125,
             PlantKind::Garlic => 50,
             PlantKind::Spikeweed => 100,
+            PlantKind::LilyPad => 50,
+            PlantKind::FlowerPot => 25,
         }
     }
 
@@ -141,6 +153,8 @@ impl PlantKind {
             PlantKind::Starfruit => 0.75,
             PlantKind::Garlic => 0.75,
             PlantKind::Spikeweed => 0.75,
+            PlantKind::LilyPad => 0.75,
+            PlantKind::FlowerPot => 0.75,
         }
     }
 
@@ -149,6 +163,7 @@ impl PlantKind {
             PlantKind::WallNut => 4000.0,
             PlantKind::Cherry => 9999.0,
             PlantKind::Garlic => 400.0,
+            PlantKind::LilyPad | PlantKind::FlowerPot => 400.0,
             _ => 300.0,
         }
     }
@@ -169,6 +184,8 @@ impl PlantKind {
             PlantKind::Starfruit => "星星果",
             PlantKind::Garlic => "大蒜",
             PlantKind::Spikeweed => "地刺",
+            PlantKind::LilyPad => "睡莲",
+            PlantKind::FlowerPot => "花盆",
         }
     }
 
@@ -188,6 +205,8 @@ impl PlantKind {
             PlantKind::Starfruit => "向五个方向同时发射星星",
             PlantKind::Garlic => "被咬后把僵尸引到相邻一行",
             PlantKind::Spikeweed => "僵尸踩过持续受伤，不会被啃食",
+            PlantKind::LilyPad => "种在水面，承载水上植物",
+            PlantKind::FlowerPot => "放在屋顶，承载屋顶植物",
         }
     }
 }
@@ -266,6 +285,25 @@ impl ZombieKind {
     }
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum Terrain {
+    Lawn,
+    Pool,
+    Roof,
+}
+
+pub fn rows_for(terrain: Terrain) -> usize {
+    if terrain == Terrain::Pool { 6 } else { 5 }
+}
+
+pub fn cell_h_for(terrain: Terrain) -> f32 {
+    (LAWN_BOTTOM - GRID_Y) / rows_for(terrain) as f32
+}
+
+pub fn is_water_row(terrain: Terrain, row: usize) -> bool {
+    terrain == Terrain::Pool && (row == 2 || row == 3)
+}
+
 pub const LEVEL_COUNT: usize = 50;
 pub const WORLD_COUNT: usize = 5;
 pub const LEVELS_PER_WORLD: usize = 10;
@@ -287,9 +325,9 @@ pub const WORLD_SUBS: [&str; WORLD_COUNT] = [
 pub const WORLD_HINTS: [&str; WORLD_COUNT] = [
     "白天阳光充足，先铺向日葵再补输出",
     "夜晚阳光稀少，优先带足经济植物",
-    "泳池关波次更密，注意两翼与中路",
+    "第 2、3 行是水面，先种睡莲再种植物",
     "浓雾中视野受限，带上范围清场植物",
-    "屋顶决战，橄榄球与扶梯僵尸齐上",
+    "屋顶先放花盆才能种植物，注意斜坡",
 ];
 static WORLD_TINT: [(u8, u8, u8, f32); WORLD_COUNT] = [
     (0, 0, 0, 0.0),
@@ -381,12 +419,13 @@ pub struct LevelCfg {
     pub tint: (u8, u8, u8, f32),
     pub pool: &'static [ZombieKind],
     pub plants: &'static [PlantKind],
+    pub terrain: Terrain,
     pub slots: usize,
     pub seed_hint: &'static str,
 }
 
 /// 植物按关卡逐步解锁，顺序沿用原版冒险模式的获得节奏，映射到本作已有的 14 种植物。
-static PLANT_UNLOCK_ORDER: [PlantKind; 14] = [
+static PLANT_UNLOCK_ORDER: [PlantKind; 16] = [
     PlantKind::Peashooter,
     PlantKind::Sunflower,
     PlantKind::Cherry,
@@ -396,13 +435,15 @@ static PLANT_UNLOCK_ORDER: [PlantKind; 14] = [
     PlantKind::Repeater,
     PlantKind::Cabbage,
     PlantKind::Garlic,
+    PlantKind::LilyPad,
     PlantKind::Spikeweed,
     PlantKind::Threepeater,
     PlantKind::Jalapeno,
     PlantKind::Starfruit,
+    PlantKind::FlowerPot,
     PlantKind::Squash,
 ];
-static PLANT_UNLOCK_AT: [usize; 14] = [0, 1, 2, 3, 4, 5, 11, 14, 17, 21, 26, 31, 36, 41];
+static PLANT_UNLOCK_AT: [usize; 16] = [0, 1, 2, 3, 4, 5, 11, 14, 17, 20, 24, 26, 31, 36, 40, 45];
 
 pub fn plants_for_level(level: usize) -> &'static [PlantKind] {
     let n = PLANT_UNLOCK_AT.iter().filter(|x| **x <= level).count().max(1);
@@ -424,6 +465,11 @@ pub fn level_cfg(i: usize) -> LevelCfg {
         tint: WORLD_TINT[world],
         pool: LEVEL_POOLS[level],
         plants: plants_for_level(level),
+        terrain: match world {
+            2 | 3 => Terrain::Pool,
+            4 => Terrain::Roof,
+            _ => Terrain::Lawn,
+        },
         slots: WORLD_SLOTS[world],
         seed_hint: WORLD_HINTS[world],
     }
@@ -464,18 +510,18 @@ pub fn choose_rect(i: usize) -> (f32, f32, f32, f32) {
 }
 
 pub fn seed_slot_rect(i: usize) -> (f32, f32, f32, f32) {
-    (330.0 + i as f32 * 68.0, 180.0, 60.0, 64.0)
+    (330.0 + i as f32 * 62.0, 180.0, 56.0, 64.0)
 }
 
-pub fn cell_center(row: usize, col: usize) -> (f32, f32) {
+pub fn cell_center(row: usize, col: usize, h: f32) -> (f32, f32) {
     (
         GRID_X + col as f32 * CELL_W + CELL_W * 0.5,
-        GRID_Y + row as f32 * CELL_H + CELL_H * 0.5,
+        GRID_Y + row as f32 * h + h * 0.5,
     )
 }
 
-pub fn row_ground(row: usize) -> f32 {
-    GRID_Y + (row as f32 + 1.0) * CELL_H - 10.0
+pub fn row_ground(row: usize, h: f32) -> f32 {
+    GRID_Y + (row as f32 + 1.0) * h - 10.0
 }
 
 pub fn rect_contains(r: (f32, f32, f32, f32), x: f32, y: f32) -> bool {

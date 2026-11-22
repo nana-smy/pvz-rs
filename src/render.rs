@@ -243,29 +243,52 @@ fn draw_scene(p: &P, g: &Game) {
         p.rect(0.0, 0.0, W, H, "#4f8c2c");
         for col in 0..COLS {
             let c = if col % 2 == 0 { "#85c951" } else { "#77bc44" };
-            p.rect(GRID_X + col as f32 * CELL_W, GRID_Y, CELL_W, CELL_H * ROWS as f32, c);
+            p.rect(GRID_X + col as f32 * CELL_W, GRID_Y, CELL_W, g.cell_h() * g.rows() as f32, c);
         }
         draw_house(p, g);
     }
 
+    if g.cfg.terrain == Terrain::Pool {
+        let wx = GRID_X;
+        let wy = GRID_Y + 2.25 * g.cell_h();
+        let ww = COLS as f32 * CELL_W;
+        let wh = 2.55 * g.cell_h();
+        if let Some(img) = assets::water() {
+            let _ = p.c.draw_image_with_html_image_element_and_dw_and_dh(
+                &img, wx as f64, wy as f64, ww as f64, wh as f64,
+            );
+        } else {
+            p.rect(wx, wy, ww, wh, "#35b8dc");
+        }
+        if g.level / 10 == 1 || g.level / 10 == 3 {
+            p.rect(wx, wy, ww, wh, rgba(14, 38, 72, 0.38));
+        }
+        p.rect(wx, wy, ww, 6.0, rgba(216, 250, 255, 0.55));
+        p.rect(wx, wy + wh - 7.0, ww, 7.0, rgba(20, 95, 130, 0.30));
+        for i in 0..7 {
+            let bx = wx + 40.0 + i as f32 * 110.0 + (g.time * 12.0 + i as f32 * 9.0).sin() * 6.0;
+            p.ell(bx, wy + 22.0 + (g.time + i as f32).sin().abs() * 8.0, 12.0, 3.0, rgba(225, 252, 255, 0.45));
+        }
+    }
+
     // 割草机
     for m in &g.mowers {
-        draw_mower(p, m, g.time);
+        draw_mower(p, m, g.time, g.cell_h());
     }
 
     // 植物
     for pl in &g.plants {
-        draw_plant(p, pl, g.time);
+        draw_plant(p, pl, g.time, g.cell_h());
     }
 
     // 悬停格子
     if let Some((r, c)) = g.hover_cell() {
         let x = GRID_X + c as f32 * CELL_W;
-        let y = GRID_Y + r as f32 * CELL_H;
+        let y = GRID_Y + r as f32 * g.cell_h();
         if g.selected.is_some() || g.shovel {
             let valid = match g.selected {
                 Some(k) => {
-                    !g.plants.iter().any(|p| p.row == r && p.col == c)
+                    g.can_place(k, r, c).is_ok()
                         && g.sun >= k.cost()
                         && g.cooldowns[k.idx()] <= 0.0
                 }
@@ -275,7 +298,7 @@ fn draw_scene(p: &P, g: &Game) {
                 x,
                 y,
                 CELL_W,
-                CELL_H,
+                g.cell_h(),
                 if valid {
                     rgba(255, 255, 220, 0.22)
                 } else {
@@ -298,18 +321,18 @@ fn draw_scene(p: &P, g: &Game) {
             if let Some(k) = g.selected {
                 p.save();
                 p.alpha(0.42);
-                draw_plant_kind(p, k, x + CELL_W * 0.5, y + CELL_H - 10.0, g.time, 1.0, 1.0, 0.0);
+                draw_plant_kind(p, k, x + CELL_W * 0.5, y + g.cell_h() - 10.0, g.time, 1.0, 1.0, 0.0);
                 p.restore();
                 p.alpha(1.0);
             } else if g.shovel {
                 p.save();
                 p.alpha(0.6);
-                draw_shovel_icon(p, x + CELL_W * 0.5, y + CELL_H * 0.5, 0.9, -0.3);
+                draw_shovel_icon(p, x + CELL_W * 0.5, y + g.cell_h() * 0.5, 0.9, -0.3);
                 p.restore();
                 p.alpha(1.0);
             }
         } else {
-            p.rect(x, y, CELL_W, CELL_H, rgba(255, 255, 255, 0.07));
+            p.rect(x, y, CELL_W, g.cell_h(), rgba(255, 255, 255, 0.07));
         }
     }
 
@@ -323,7 +346,7 @@ fn draw_scene(p: &P, g: &Game) {
             .then(zb.x.partial_cmp(&za.x).unwrap_or(std::cmp::Ordering::Equal))
     });
     for i in order {
-        draw_zombie(p, &g.zombies[i], g.time);
+        draw_zombie(p, &g.zombies[i], g.time, g.cell_h());
     }
 
     // 豌豆
@@ -445,6 +468,30 @@ fn draw_scene(p: &P, g: &Game) {
         p.restore();
         p.alpha(1.0);
     }
+
+    if g.level / 10 == 3 {
+        let fx = GRID_X;
+        let fy = GRID_Y;
+        let fw = COLS as f32 * CELL_W;
+        let fh = g.rows() as f32 * g.cell_h();
+        if let Some(img) = assets::fog() {
+            p.save();
+            p.alpha(0.42);
+            let dx = (g.time * 18.0).sin() * 26.0;
+            let _ = p.c.draw_image_with_html_image_element_and_dw_and_dh(
+                &img, (fx + dx - 30.0) as f64, fy as f64, (fw + 60.0) as f64, fh as f64,
+            );
+            p.alpha(0.30);
+            let dx2 = (g.time * 11.0 + 2.0).sin() * 40.0;
+            let _ = p.c.draw_image_with_html_image_element_and_dw_and_dh(
+                &img, (fx + dx2 - 40.0) as f64, (fy + 12.0) as f64, (fw + 80.0) as f64, fh as f64,
+            );
+            p.restore();
+            p.alpha(1.0);
+        } else {
+            p.rect(fx, fy, fw, fh, rgba(215, 230, 225, 0.18));
+        }
+    }
 }
 
 fn draw_house(p: &P, _g: &Game) {
@@ -487,16 +534,16 @@ fn draw_house(p: &P, _g: &Game) {
     p.rect(252.0, HUD_H, 6.0, 616.0, rgba(30, 55, 15, 0.18));
     p.rect(294.0, HUD_H, 6.0, 616.0, rgba(30, 55, 15, 0.14));
     for r in 0..ROWS {
-        let y = row_ground(r);
+        let y = row_ground(r, CELL_H);
         p.ell(276.0, y + 8.0, 22.0, 7.0, rgba(20, 45, 10, 0.12));
     }
 }
 
 // ================= 植物绘制 =================
 
-fn draw_plant(p: &P, pl: &Plant, time: f32) {
+fn draw_plant(p: &P, pl: &Plant, time: f32, h: f32) {
     let cx = GRID_X + pl.col as f32 * CELL_W + CELL_W * 0.5;
-    let base = row_ground(pl.row);
+    let base = row_ground(pl.row, h);
     let s = 0.55 + 0.45 * pl.pop.min(1.0);
     p.ell(cx, base + 3.0, 30.0, 8.0, rgba(20, 45, 10, 0.20));
     let ratio = (pl.hp / pl.max_hp).clamp(0.0, 1.0);
@@ -505,16 +552,16 @@ fn draw_plant(p: &P, pl: &Plant, time: f32) {
     p.c.scale(s as f64, s as f64);
     p.c.translate(-cx as f64, -base as f64);
     if pl.kind == PlantKind::PotatoMine {
-        draw_potato_mine(p, pl, time);
+        draw_potato_mine(p, pl, time, h);
     } else {
         draw_plant_anim(p, pl.kind, cx, base, time, ratio, pl.fuse, pl.anim);
     }
     p.restore();
 }
 
-fn draw_potato_mine(p: &P, pl: &Plant, time: f32) {
+fn draw_potato_mine(p: &P, pl: &Plant, time: f32, h: f32) {
     let cx = GRID_X + pl.col as f32 * CELL_W + CELL_W * 0.5;
-    let base = row_ground(pl.row);
+    let base = row_ground(pl.row, h);
     let idle = crate::plant_anim::IDLE[Art::PotatoMine as usize];
     let rise = crate::plant_anim::RISE_POTATO;
     let (img, clip, frame) = if pl.timer > 0.0 {
@@ -565,6 +612,8 @@ fn art_of(kind: PlantKind) -> Option<Art> {
         PlantKind::Starfruit => Some(Art::Starfruit),
         PlantKind::Garlic => Some(Art::Garlic),
         PlantKind::Spikeweed => Some(Art::Spikeweed),
+        PlantKind::LilyPad => Some(Art::LilyPad),
+        PlantKind::FlowerPot => Some(Art::FlowerPot),
     }
 }
 
@@ -640,6 +689,16 @@ fn draw_plant_kind(p: &P, kind: PlantKind, cx: f32, base: f32, t: f32, hp: f32, 
             p.circle(cx + 9.0, base - 44.0, 4.0, "#7a6a59");
             p.rect(cx - 2.0, base - 68.0, 4.0, 12.0, "#cfc5ac");
         }
+        PlantKind::LilyPad => {
+            p.ell(cx, base - 14.0, 38.0, 22.0, "#5d9e35");
+            p.ell(cx, base - 18.0, 30.0, 16.0, "#79bd4a");
+            p.poly(&[(cx - 2.0, base - 20.0), (cx + 10.0, base - 12.0), (cx, base - 8.0)], "#5d9e35");
+        }
+        PlantKind::FlowerPot => {
+            p.poly(&[(cx - 24.0, base - 38.0), (cx + 24.0, base - 38.0), (cx + 17.0, base), (cx - 17.0, base)], "#a85f2d");
+            p.ell(cx, base - 38.0, 24.0, 8.0, "#c7793d");
+            p.ell(cx, base - 39.0, 19.0, 5.0, "#4b351f");
+        }
         PlantKind::Spikeweed => {
             p.ell(cx, base - 8.0, 34.0, 10.0, "#5a8f2e");
             for k in 0..5 {
@@ -666,6 +725,8 @@ fn art_height(art: Art) -> f32 {
         Art::Starfruit => 86.0,
         Art::Garlic => 80.0,
         Art::Spikeweed => 42.0,
+        Art::LilyPad => 72.0,
+        Art::FlowerPot => 92.0,
     }
 }
 
@@ -953,8 +1014,8 @@ fn draw_shovel_icon(p: &P, x: f32, y: f32, s: f32, rot: f32) {
 
 // ================= 僵尸绘制 =================
 
-fn draw_zombie(p: &P, z: &Zombie, time: f32) {
-    let gy = row_ground(z.row) + 2.0;
+fn draw_zombie(p: &P, z: &Zombie, time: f32, h: f32) {
+    let gy = row_ground(z.row, h) + 2.0;
     p.ell(z.x, gy + 8.0, 26.0, 8.0, rgba(20, 40, 10, 0.22));
     let frame = (((time * 12.0 + z.x * 0.045 + z.row as f32 * 1.3) as i32).rem_euclid(16)) as u8;
     if let Some(img) = assets::zombie(z.kind as u8, frame) {
@@ -1182,8 +1243,8 @@ fn draw_sun(p: &P, s: &Sun, time: f32) {
     p.alpha(1.0);
 }
 
-fn draw_mower(p: &P, m: &Mower, time: f32) {
-    let gy = row_ground(m.row) + 6.0;
+fn draw_mower(p: &P, m: &Mower, time: f32, h: f32) {
+    let gy = row_ground(m.row, h) + 6.0;
     let x = if m.running { m.x } else { MOWER_X };
     if m.used && !m.running {
         return;
@@ -1451,7 +1512,8 @@ fn draw_card(p: &P, g: &Game, i: usize) {
         p.alpha(0.55);
     }
     p.c.translate((x + w * 0.5) as f64, (y + 57.0) as f64);
-    p.c.scale(0.34, 0.34);
+    let cs = if k.is_base() { 0.60 } else { 0.34 };
+    p.c.scale(cs, cs);
     draw_plant_kind(p, k, 0.0, 0.0, g.time, 1.0, 1.0, 0.0);
     p.restore();
     p.alpha(1.0);

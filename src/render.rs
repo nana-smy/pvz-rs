@@ -1878,7 +1878,13 @@ fn draw_menu(p: &P, g: &Game) {
     p.rr_s(r.0, y, r.2, r.3, 16.0, 3.0, if hover { "#ffe6a3" } else { "#e8c477" });
     p.text_out("冒 险 模 式", r.0 + r.2 * 0.5, y + 36.0, 34.0, "#fff6d2", "#5a2f0d", "center", true);
     p.text("ADVENTURE  ·  1-1 至 5-10", r.0 + r.2 * 0.5, y + 62.0, 12.0, rgba(255, 240, 200, 0.86), "center", false);
-    p.text("点击冒险模式 → 五章五十关地图 → 选关卡 → 选种子开战", W * 0.5, 524.0, 14.0, rgba(236, 248, 218, 0.9), "center", false);
+    let sr = BTN_SURVIVAL;
+    let sh = rect_contains(sr, g.mouse.0, g.mouse.1);
+    p.rr(sr.0, sr.1 + 3.0, sr.2, sr.3, 12.0, rgba(0, 0, 0, 0.32));
+    p.rr(sr.0, sr.1, sr.2, sr.3, 12.0, if sh { "#6c8f3c" } else { "#5a7a32" });
+    p.rr_s(sr.0, sr.1, sr.2, sr.3, 12.0, 2.0, if sh { "#e9f5bd" } else { "#c6dd8e" });
+    p.text("生 存 模 式 · 无尽", sr.0 + sr.2 * 0.5, sr.1 + 31.0, 20.0, "#f8ffe8", "center", true);
+    p.text("点击冒险模式 → 五章五十关地图 → 选关卡 → 选种子开战", W * 0.5, 588.0, 13.0, rgba(236, 248, 218, 0.9), "center", false);
     p.text("Rust + WebAssembly ｜ 正版植物立绘与原声素材 ｜ Canvas 2D", W * 0.5, 706.0, 13.0, rgba(230, 245, 210, 0.75), "center", false);
 }
 

@@ -172,6 +172,7 @@ pub struct Game {
     pub map_page: usize,
     pub cfg: LevelCfg,
     pub last_planted: Option<PlantKind>,
+    pub endless: bool,
 }
 
 fn part(
@@ -245,10 +246,31 @@ impl Game {
             map_page: 0,
             cfg: level_cfg(0),
             last_planted: None,
+            endless: false,
         }
     }
 
+    pub fn enter_survival(&mut self) {
+        self.endless = true;
+        self.level = 0;
+        self.cfg = level_cfg(0);
+        self.cfg.waves = 999;
+        self.cfg.plants = crate::defs::PLANT_ALL;
+        self.cfg.pool = crate::defs::ZOMBIE_ALL;
+        self.cfg.slots = 9;
+        self.cfg.seed_hint = "生存模式 · 全植物 · 无尽波次";
+        self.state = State::Choosing;
+        self.seeds.clear();
+        self.selected = None;
+        self.shovel = false;
+        self.banner = None;
+        self.toast = None;
+        self.sfx.click();
+        self.sfx.music(true);
+    }
+
     pub fn enter_choose(&mut self, level: usize) {
+        self.endless = false;
         self.level = level;
         self.cfg = level_cfg(level);
         self.state = State::Choosing;
@@ -285,6 +307,12 @@ impl Game {
         self.sfx.music(true);
         self.state = State::Playing;
         self.cfg = level_cfg(self.level);
+        if self.endless {
+            self.cfg.waves = 999;
+            self.cfg.plants = crate::defs::PLANT_ALL;
+            self.cfg.pool = crate::defs::ZOMBIE_ALL;
+            self.cfg.slots = 9;
+        }
         self.elapsed = 0.0;
         self.sun = self.cfg.sun;
         self.sun_pop = 0.0;
@@ -1801,7 +1829,12 @@ impl Game {
         self.mouse = (x, y);
         match self.state {
             State::Menu => {
+                if button != 2 && rect_contains(BTN_SURVIVAL, x, y) {
+                    self.enter_survival();
+                    return;
+                }
                 if button != 2 && rect_contains(BTN_ADVENTURE, x, y) {
+                    self.endless = false;
                     self.state = State::Map;
                     self.sfx.click();
                     return;
@@ -1829,7 +1862,8 @@ impl Game {
             }
             State::Choosing => {
                 if button == 2 || rect_contains((12.0, 12.0, 92.0, 40.0), x, y) {
-                    self.state = State::Map;
+                    self.state = if self.endless { State::Menu } else { State::Map };
+                    self.endless = false;
                     self.sfx.click();
                     return;
                 }
@@ -2149,7 +2183,8 @@ impl Game {
                 self.selected = None;
                 self.shovel = false;
                 if self.state == State::Choosing {
-                    self.state = State::Map;
+                    self.state = if self.endless { State::Menu } else { State::Map };
+                    self.endless = false;
                 } else if self.state == State::Map {
                     self.state = State::Menu;
                 } else if self.state == State::Playing {

@@ -462,6 +462,20 @@ pub enum ZombieKind {
 }
 
 impl ZombieKind {
+    pub const ALL: [ZombieKind; 26] = [
+        ZombieKind::Basic, ZombieKind::Flag, ZombieKind::Cone, ZombieKind::PoleVault,
+        ZombieKind::Bucket, ZombieKind::Newspaper, ZombieKind::ScreenDoor, ZombieKind::Football,
+        ZombieKind::Dancing, ZombieKind::BackupDancer, ZombieKind::DuckyTube, ZombieKind::Snorkel,
+        ZombieKind::Zomboni, ZombieKind::Bobsled, ZombieKind::DolphinRider, ZombieKind::Jackbox,
+        ZombieKind::Balloon, ZombieKind::Digger, ZombieKind::Pogo, ZombieKind::Yeti,
+        ZombieKind::Bungee, ZombieKind::Ladder, ZombieKind::Catapult, ZombieKind::Gargantuar,
+        ZombieKind::Imp, ZombieKind::Boss,
+    ];
+}
+pub static ZOMBIE_ALL: &[ZombieKind] = &ZombieKind::ALL;
+pub static PLANT_ALL: &[PlantKind] = &PlantKind::ALL;
+
+impl ZombieKind {
     pub fn hp(self) -> f32 {
         match self {
             ZombieKind::Basic => 200.0,
@@ -875,6 +889,7 @@ pub fn world_tab_rect(i: usize) -> (f32, f32, f32, f32) {
 }
 
 pub const BTN_ADVENTURE: (f32, f32, f32, f32) = (468.0, 414.0, 344.0, 82.0);
+pub const BTN_SURVIVAL: (f32, f32, f32, f32) = (498.0, 512.0, 284.0, 50.0);
 pub const MAP_BACK: (f32, f32, f32, f32) = (16.0, 14.0, 104.0, 38.0);
 
 pub const CHOOSE_COLS: usize = 10;

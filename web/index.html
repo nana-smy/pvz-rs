@@ -347,8 +347,8 @@
   const loadingText = document.querySelector('#loader p');
   const loadOne = (key, src) =>
     new Promise((resolve) => {
-      const img = new Image();
       let done = false;
+      let attempt = 0;
       const finish = () => {
         if (done) return;
         done = true;
@@ -356,18 +356,29 @@
         resolve();
       };
       const timer = setTimeout(finish, 30000);
-      img.onload = () => {
-        window.__pvzAssets[key] = img;
-        finish();
+      const start = () => {
+        attempt += 1;
+        const img = new Image();
+        // 植物与背景优先，僵尸帧只用于战斗阶段，避免占满并发连接让末位植物长时间空白
+        img.fetchPriority = key.startsWith('z_') ? 'low' : 'high';
+        img.onload = () => {
+          window.__pvzAssets[key] = img;
+          finish();
+        };
+        img.onerror = () => {
+          // GitHub Pages 的 HTTP/2 连接偶尔会丢图；同一素材重试一次再放弃。
+          if (attempt < 2) setTimeout(start, 350);
+          else finish();
+        };
+        img.src = src.startsWith('data:') ? src : src + '?v=__ASSET_VERSION__&r=' + attempt;
       };
-      img.onerror = finish;
-      // 植物与背景优先，僵尸帧只用于战斗阶段，避免占满并发连接让末位植物长时间空白
-      img.fetchPriority = key.startsWith('z_') ? 'low' : 'high';
-      img.src = src.startsWith('data:') ? src : src + '?v=__ASSET_VERSION__';
+      start();
     });
-  // 素材并行加载；最多等 2.5 秒就开始游戏，迟到图片由 Rust 侧按需拾取
-  const allImages = Promise.all(Object.entries(IMG_SRC).map(([k, v]) => loadOne(k, v)));
-  await Promise.race([allImages, new Promise((r) => setTimeout(r, 2500))]);
+  // 植物、卡面与背景必须齐全后再进游戏；僵尸帧仍可迟到，由 Rust 侧按需拾取。
+  const coreImages = Promise.all(Object.entries(IMG_SRC)
+    .filter(([k]) => !k.startsWith('z_'))
+    .map(([k, v]) => loadOne(k, v)));
+  await Promise.race([coreImages, new Promise((r) => setTimeout(r, 6000))]);
 
   function fit() {
     const pad = window.innerWidth > 900 ? 18 : 0;

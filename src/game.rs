@@ -1496,12 +1496,44 @@ impl Game {
         let waves = self.cfg.waves.max(1) as usize;
         let unlocked = (((w as usize - 1) * full.len()) / waves + 1).min(full.len());
 
+        let mut kinds: Vec<ZombieKind> = full[..unlocked].to_vec();
+        // 原版按章节逐步放开的僵尸，不塞进每关静态池，避免 50 个池子重复维护。
+        let l = self.level;
+        if w >= 2 {
+            if l >= 5 && l < 10 { kinds.push(ZombieKind::Newspaper); }
+            if l >= 8 && l < 10 { kinds.push(ZombieKind::Dancing); }
+            if l >= 10 && l < 20 {
+                if l >= 11 { kinds.push(ZombieKind::Jackbox); }
+                if l >= 12 { kinds.push(ZombieKind::Balloon); }
+                if l >= 14 { kinds.push(ZombieKind::Pogo); }
+                if l >= 16 { kinds.push(ZombieKind::Digger); }
+                if l >= 19 { kinds.push(ZombieKind::Yeti); }
+            }
+            if l >= 20 && l < 30 {
+                kinds.push(ZombieKind::DuckyTube);
+                if l >= 21 { kinds.push(ZombieKind::Snorkel); }
+                if l >= 23 { kinds.push(ZombieKind::DolphinRider); }
+                if l >= 25 { kinds.push(ZombieKind::Zomboni); }
+                if l >= 27 { kinds.push(ZombieKind::Bobsled); }
+            }
+            if l >= 30 && l < 40 {
+                if l >= 31 { kinds.push(ZombieKind::Bungee); }
+                if l >= 33 { kinds.push(ZombieKind::Balloon); }
+                if l >= 35 { kinds.push(ZombieKind::Digger); }
+            }
+            if l >= 40 {
+                if l >= 41 { kinds.push(ZombieKind::Catapult); }
+                if l >= 45 { kinds.push(ZombieKind::Gargantuar); }
+                if l == 49 && w == self.cfg.waves { kinds.push(ZombieKind::Boss); }
+            }
+        }
         let mut candidates: Vec<(ZombieKind, u32)> = Vec::new();
         let mut total = 0u32;
-        for &kind in &full[..unlocked] {
-            if kind == ZombieKind::Flag || kind.wave_value() > *budget {
+        for kind in kinds {
+            if kind == ZombieKind::Flag || kind.wave_value() == 0 || kind.wave_value() > *budget {
                 continue;
             }
+            if candidates.iter().any(|(k, _)| *k == kind) { continue; }
             let weight = kind.pick_weight().max(1);
             candidates.push((kind, weight));
             total += weight;
@@ -1557,6 +1589,15 @@ impl Game {
         }
 
         for (delay, kind, row) in items {
+            if kind == ZombieKind::Dancing {
+                for j in 0..2 {
+                    self.pending.push(Pending {
+                        at: self.elapsed + delay + 0.25 + j as f32 * 0.18,
+                        kind: ZombieKind::BackupDancer,
+                        row,
+                    });
+                }
+            }
             self.pending.push(Pending {
                 at: self.elapsed + delay,
                 kind,

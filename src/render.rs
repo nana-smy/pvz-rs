@@ -505,8 +505,7 @@ fn art_of(kind: PlantKind) -> Option<Art> {
 
 fn draw_plant_kind(p: &P, kind: PlantKind, cx: f32, base: f32, t: f32, hp: f32, fuse: f32, anim: f32) {
     if let Some(art) = art_of(kind) {
-        if assets::ready() {
-            draw_art_plant(p, kind, art, cx, base, t, hp, fuse, anim);
+        if assets::ready() && draw_art_plant(p, kind, art, cx, base, t, hp, fuse, anim) {
             return;
         }
     }
@@ -586,12 +585,12 @@ fn draw_plant_kind(p: &P, kind: PlantKind, cx: f32, base: f32, t: f32, hp: f32, 
     }
 }
 
-fn draw_art_plant(p: &P, kind: PlantKind, art: Art, cx: f32, base: f32, t: f32, hp: f32, fuse: f32, anim: f32) {
-    let Some(img) = assets::image(art) else { return };
+fn draw_art_plant(p: &P, kind: PlantKind, art: Art, cx: f32, base: f32, t: f32, hp: f32, fuse: f32, anim: f32) -> bool {
+    let Some(img) = assets::image(art) else { return false };
     let ih = img.height() as f32;
     let iw = img.width() as f32;
     if ih <= 0.0 {
-        return;
+        return false;
     }
     let h = match art {
         Art::Sunflower => 116.0,
@@ -644,6 +643,7 @@ fn draw_art_plant(p: &P, kind: PlantKind, art: Art, cx: f32, base: f32, t: f32, 
         }
     }
     p.restore();
+    true
 }
 
 fn draw_sunflower(p: &P, cx: f32, base: f32, t: f32) {

@@ -374,11 +374,27 @@
       };
       start();
     });
+  // 限制并发，避免 GitHub Pages 的 HTTP/2 连接被上百张图同时打满。
+  const jobs = [];
+  let active = 0;
+  const pump = () => {
+    while (active < 4 && jobs.length) {
+      const job = jobs.shift();
+      active += 1;
+      job.run().finally(() => { active -= 1; pump(); });
+    }
+  };
+  const enqueue = (key, src) => new Promise((resolve) => {
+    jobs.push({ run: () => loadOne(key, src).then(resolve) });
+    pump();
+  });
   // 植物、卡面与背景必须齐全后再进游戏；僵尸帧仍可迟到，由 Rust 侧按需拾取。
   const coreImages = Promise.all(Object.entries(IMG_SRC)
     .filter(([k]) => !k.startsWith('z_'))
-    .map(([k, v]) => loadOne(k, v)));
-  await Promise.race([coreImages, new Promise((r) => setTimeout(r, 6000))]);
+    .map(([k, v]) => enqueue(k, v)));
+  await Promise.race([coreImages, new Promise((r) => setTimeout(r, 10000))]);
+  // 战斗素材随后排队加载，不阻塞选卡界面。
+  Object.entries(IMG_SRC).filter(([k]) => k.startsWith('z_')).forEach(([k, v]) => enqueue(k, v));
 
   function fit() {
     const pad = window.innerWidth > 900 ? 18 : 0;

@@ -52,4 +52,29 @@ if __name__ == '__main__':
     build('assets-core.tar', os.path.join(ROOT, 'assets-webp'), ['plants', 'bg', 'projectiles'])
     build('assets-zombies.tar', os.path.join(ROOT, 'assets-webp'), ['zombies'])
     build('assets-audio.tar', os.path.join(ROOT, 'assets'), ['audio'])
-    build('assets-reanim.tar', os.path.join(ROOT, 'assets'), ['reanim'])
+    # GitHub Pages 对单次大文件传输偶发断连；按体积均分两包，页面并行拉取后合并。
+    import glob
+    reanim_files = []
+    for p in glob.glob(os.path.join(ROOT, 'assets', 'reanim', '*')):
+        if os.path.isfile(p):
+            reanim_files.append((os.path.getsize(p), p))
+        elif os.path.isdir(p):
+            for b, _, fs in os.walk(p):
+                for f in fs:
+                    fp = os.path.join(b, f)
+                    reanim_files.append((os.path.getsize(fp), fp))
+    bins = [[], []]
+    for size, p in sorted(reanim_files, reverse=True):
+        i = 0 if sum(x[0] for x in bins[0]) <= sum(x[0] for x in bins[1]) else 1
+        bins[i].append((size, p))
+    for idx, items in enumerate(bins):
+        out = os.path.join(OUT, f'assets-reanim-{idx}.tar')
+        with tarfile.open(out, 'w', format=tarfile.USTAR_FORMAT) as tar:
+            for _, p in items:
+                rel = os.path.relpath(p, os.path.join(ROOT, 'assets')).replace(os.sep, '/')
+                ti = tar.gettarinfo(p, arcname='assets/' + rel)
+                ti.uid = ti.gid = 0
+                ti.uname = ti.gname = ''
+                with open(p, 'rb') as fh:
+                    tar.addfile(ti, fh)
+        print(f'assets-reanim-{idx}.tar', os.path.getsize(out), len(items))

@@ -768,9 +768,19 @@
       if (m && bgm) bgm.src = m;
     }
   });
-  packLater('./assets-reanim.tar', 100, () => {
+  const packReanim = async () => {
+    const merged = new Map();
+    for (const url of ['./assets-reanim-0.tar', './assets-reanim-1.tar']) {
+      try {
+        const files = await fetchAssetPack(url);
+        files.forEach((u, k) => merged.set(k, u));
+      } catch (e) { console.warn('[pvz] reanim 分包失败', url, e); }
+    }
+    if (merged.size < 100) console.warn('[pvz] reanim 分包不完整，将回退散资源', merged.size);
+    merged.forEach((u, k) => packUrls.set(k, u));
     Object.entries(IMG_SRC).filter(([k]) => k.startsWith('r_')).forEach(([k, v]) => enqueue(k, v));
-  });
+  };
+  packReanim();
   packLater('./assets-zombies.tar', 100, () => {
     Object.entries(IMG_SRC).filter(([k]) => k.startsWith('z_')).forEach(([k, v]) => enqueue(k, v));
   });

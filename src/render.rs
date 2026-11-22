@@ -744,7 +744,8 @@ fn draw_shovel_icon(p: &P, x: f32, y: f32, s: f32, rot: f32) {
 fn draw_zombie(p: &P, z: &Zombie, time: f32) {
     let gy = row_ground(z.row) + 2.0;
     p.ell(z.x, gy + 8.0, 26.0, 8.0, rgba(20, 40, 10, 0.22));
-    if let Some(img) = assets::zombie(z.kind as u8) {
+    let frame = (((time * 8.0 + z.x * 0.045 + z.row as f32 * 1.3) as i32).rem_euclid(8)) as u8;
+    if let Some(img) = assets::zombie(z.kind as u8, frame) {
         p.save();
         p.c.translate(z.x as f64, gy as f64);
         if z.dying {
@@ -756,13 +757,14 @@ fn draw_zombie(p: &P, z: &Zombie, time: f32) {
         let bob = walk * 1.4;
         let lean = if z.eating { -0.05 } else { 0.0 };
         p.c.rotate(lean as f64);
-        let scale = 0.26;
+        let scale = 0.40;
         let w = img.width() as f32 * scale;
         let h = img.height() as f32 * scale;
+        let foot_pad = h * 0.033;
         let _ = p.c.draw_image_with_html_image_element_and_dw_and_dh(
             &img,
             (-w * 0.5) as f64,
-            (-h + 7.0 + bob) as f64,
+            (-h + foot_pad + bob) as f64,
             w as f64,
             h as f64,
         );

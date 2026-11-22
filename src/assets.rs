@@ -53,14 +53,63 @@ thread_local! {
     static BGS: RefCell<Vec<Option<HtmlImageElement>>> = const { RefCell::new(Vec::new()) };
 }
 
-const Z_KEYS: [&str; 7] = [
-    "z_normal",
-    "z_cone",
-    "z_bucket",
-    "z_flag",
-    "z_polevault",
-    "z_screendoor",
-    "z_football",
+const Z_KEYS: [&str; 56] = [
+    "z_normal_0",
+    "z_normal_1",
+    "z_normal_2",
+    "z_normal_3",
+    "z_normal_4",
+    "z_normal_5",
+    "z_normal_6",
+    "z_normal_7",
+    "z_cone_0",
+    "z_cone_1",
+    "z_cone_2",
+    "z_cone_3",
+    "z_cone_4",
+    "z_cone_5",
+    "z_cone_6",
+    "z_cone_7",
+    "z_bucket_0",
+    "z_bucket_1",
+    "z_bucket_2",
+    "z_bucket_3",
+    "z_bucket_4",
+    "z_bucket_5",
+    "z_bucket_6",
+    "z_bucket_7",
+    "z_flag_0",
+    "z_flag_1",
+    "z_flag_2",
+    "z_flag_3",
+    "z_flag_4",
+    "z_flag_5",
+    "z_flag_6",
+    "z_flag_7",
+    "z_polevault_0",
+    "z_polevault_1",
+    "z_polevault_2",
+    "z_polevault_3",
+    "z_polevault_4",
+    "z_polevault_5",
+    "z_polevault_6",
+    "z_polevault_7",
+    "z_screendoor_0",
+    "z_screendoor_1",
+    "z_screendoor_2",
+    "z_screendoor_3",
+    "z_screendoor_4",
+    "z_screendoor_5",
+    "z_screendoor_6",
+    "z_screendoor_7",
+    "z_football_0",
+    "z_football_1",
+    "z_football_2",
+    "z_football_3",
+    "z_football_4",
+    "z_football_5",
+    "z_football_6",
+    "z_football_7",
 ];
 const BG_KEYS: [&str; 3] = ["bg_day", "bg_dusk", "bg_night"];
 
@@ -128,8 +177,8 @@ pub fn image(art: Art) -> Option<HtmlImageElement> {
     got
 }
 
-pub fn zombie(kind: u8) -> Option<HtmlImageElement> {
-    let idx = kind as usize;
+pub fn zombie(kind: u8, frame: u8) -> Option<HtmlImageElement> {
+    let idx = kind as usize * 8 + (frame as usize & 7);
     if idx >= Z_KEYS.len() {
         return None;
     }

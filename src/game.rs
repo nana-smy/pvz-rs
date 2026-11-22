@@ -1413,12 +1413,12 @@ impl Game {
             match z.kind {
                 ZombieKind::Newspaper if z.phase == 0 && z.hp <= z.max_hp * 0.5 => {
                     z.phase = 1;
-                    z.speed *= 1.6;
+                    z.speed = self.rng.f(89.0, 91.0);
                     z.flash = 1.0;
                 }
                 ZombieKind::Digger if z.phase == 0 && z.x <= 300.0 => {
                     z.phase = 1;
-                    z.speed = 45.0;
+                    z.speed = 12.0;
                     z.flash = 0.8;
                 }
                 ZombieKind::Jackbox if z.phase == 0 && z.x <= 360.0 => {

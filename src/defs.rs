@@ -116,7 +116,7 @@ impl PlantKind {
             PlantKind::PotatoMine => 25,
             PlantKind::Jalapeno => 125,
             PlantKind::Threepeater => 325,
-            PlantKind::Squash => 125,
+            PlantKind::Squash => 50,
             PlantKind::Cabbage => 100,
             PlantKind::Starfruit => 125,
             PlantKind::Garlic => 50,
@@ -124,30 +124,31 @@ impl PlantKind {
         }
     }
 
+    /// 零售 1073 的种子包冷却，单位秒（原表毫秒换算）。
     pub fn cooldown(self) -> f32 {
         match self {
-            PlantKind::Sunflower => 5.0,
-            PlantKind::Peashooter => 5.0,
-            PlantKind::WallNut => 20.0,
-            PlantKind::Cherry => 25.0,
-            PlantKind::SnowPea => 8.0,
-            PlantKind::Repeater => 10.0,
-            PlantKind::PotatoMine => 18.0,
-            PlantKind::Jalapeno => 30.0,
-            PlantKind::Threepeater => 12.0,
-            PlantKind::Squash => 20.0,
-            PlantKind::Cabbage => 7.5,
-            PlantKind::Starfruit => 5.0,
-            PlantKind::Garlic => 10.0,
-            PlantKind::Spikeweed => 7.5,
+            PlantKind::Sunflower => 0.75,
+            PlantKind::Peashooter => 0.75,
+            PlantKind::WallNut => 3.0,
+            PlantKind::Cherry => 5.0,
+            PlantKind::SnowPea => 0.75,
+            PlantKind::Repeater => 0.75,
+            PlantKind::PotatoMine => 3.0,
+            PlantKind::Jalapeno => 5.0,
+            PlantKind::Threepeater => 0.75,
+            PlantKind::Squash => 3.0,
+            PlantKind::Cabbage => 0.75,
+            PlantKind::Starfruit => 0.75,
+            PlantKind::Garlic => 0.75,
+            PlantKind::Spikeweed => 0.75,
         }
     }
 
     pub fn hp(self) -> f32 {
         match self {
-            PlantKind::WallNut => 3000.0,
+            PlantKind::WallNut => 4000.0,
             PlantKind::Cherry => 9999.0,
-            PlantKind::Garlic => 450.0,
+            PlantKind::Garlic => 400.0,
             _ => 300.0,
         }
     }
@@ -206,34 +207,61 @@ pub enum ZombieKind {
 impl ZombieKind {
     pub fn hp(self) -> f32 {
         match self {
-            ZombieKind::Basic => 220.0,
-            ZombieKind::Cone => 600.0,
-            ZombieKind::Bucket => 1400.0,
-            ZombieKind::Flag => 260.0,
+            ZombieKind::Basic => 200.0,
+            ZombieKind::Cone => 570.0,
+            ZombieKind::Bucket => 1300.0,
+            ZombieKind::Flag => 200.0,
             ZombieKind::PoleVault => 500.0,
-            ZombieKind::ScreenDoor => 240.0,
+            ZombieKind::ScreenDoor => 200.0,
             ZombieKind::Football => 1600.0,
-            ZombieKind::Ladder => 550.0,
+            ZombieKind::Ladder => 500.0,
         }
     }
 
-    pub fn speed(self) -> f32 {
+    /// 零售 1073：普通/路障/铁桶/铁门随机 0.23~0.37 px/tick（23~37 px/s）；
+    /// 旗帜固定 0.45；撑杆、橄榄球 0.66~0.68；扶梯 0.79~0.81。
+    pub fn speed_range(self) -> (f32, f32) {
         match self {
-            ZombieKind::Basic => 20.0,
-            ZombieKind::Cone => 19.5,
-            ZombieKind::Bucket => 17.0,
-            ZombieKind::Flag => 28.0,
-            ZombieKind::PoleVault => 34.0,
-            ZombieKind::ScreenDoor => 18.0,
-            ZombieKind::Football => 32.0,
-            ZombieKind::Ladder => 18.0,
+            ZombieKind::Basic
+            | ZombieKind::Cone
+            | ZombieKind::Bucket
+            | ZombieKind::ScreenDoor => (23.0, 37.0),
+            ZombieKind::Flag => (45.0, 45.0),
+            ZombieKind::PoleVault | ZombieKind::Football => (66.0, 68.0),
+            ZombieKind::Ladder => (79.0, 81.0),
         }
     }
 
     pub fn shield(self) -> f32 {
         match self {
             ZombieKind::ScreenDoor => 1100.0,
+            ZombieKind::Ladder => 500.0,
             _ => 0.0,
+        }
+    }
+
+    /// 原版 gZombieDefs 的出怪点数：普通 1、路障 2、撑杆 2、铁桶 4、铁门 4、橄榄球 7、扶梯 4。
+    pub fn wave_value(self) -> u32 {
+        match self {
+            ZombieKind::Basic => 1,
+            ZombieKind::Cone | ZombieKind::PoleVault => 2,
+            ZombieKind::Bucket | ZombieKind::ScreenDoor | ZombieKind::Ladder => 4,
+            ZombieKind::Football => 7,
+            ZombieKind::Flag => 0,
+        }
+    }
+
+    /// 原版 gZombieDefs 的选取权重。
+    pub fn pick_weight(self) -> u32 {
+        match self {
+            ZombieKind::Basic => 4000,
+            ZombieKind::Cone => 4000,
+            ZombieKind::PoleVault => 2000,
+            ZombieKind::Bucket => 3000,
+            ZombieKind::ScreenDoor => 3500,
+            ZombieKind::Football => 2000,
+            ZombieKind::Ladder => 1000,
+            ZombieKind::Flag => 0,
         }
     }
 }
@@ -247,6 +275,7 @@ pub struct LevelCfg {
     pub sun: i32,
     pub waves: u32,
     pub first_wave: f32,
+    pub flag_wave: u32,
     pub gaps: &'static [f32],
     pub tint: (u8, u8, u8, f32),
     pub pool: &'static [ZombieKind],
@@ -258,7 +287,7 @@ pub struct LevelCfg {
 static GAPS_A: [f32; 7] = [30.0, 28.0, 26.0, 24.0, 22.0, 20.0, 18.0];
 static GAPS_B: [f32; 9] = [28.0, 26.0, 24.0, 23.0, 22.0, 21.0, 20.0, 19.0, 18.0];
 static GAPS_C: [f32; 11] = [26.0, 25.0, 24.0, 23.0, 22.0, 21.0, 20.0, 19.0, 18.0, 17.0, 16.0];
-static POOL_A: [ZombieKind; 2] = [ZombieKind::Basic, ZombieKind::Cone];
+static POOL_A: [ZombieKind; 1] = [ZombieKind::Basic];
 static POOL_B: [ZombieKind; 4] = [
     ZombieKind::Basic,
     ZombieKind::Cone,
@@ -321,8 +350,9 @@ pub fn level_cfg(i: usize) -> LevelCfg {
             name: "黄昏 · 前院",
             subtitle: "更多铁桶与铁门僵尸",
             sun: 90,
-            waves: 7,
-            first_wave: 28.0,
+            waves: 6,
+            first_wave: 18.0,
+            flag_wave: 6,
             gaps: &GAPS_B,
             tint: (0, 0, 0, 0.0),
             pool: &POOL_B,
@@ -335,7 +365,8 @@ pub fn level_cfg(i: usize) -> LevelCfg {
             subtitle: "撑杆跳、橄榄球僵尸来袭",
             sun: 100,
             waves: 8,
-            first_wave: 26.0,
+            first_wave: 18.0,
+            flag_wave: 8,
             gaps: &GAPS_C,
             tint: (0, 0, 0, 0.0),
             pool: &POOL_C,
@@ -347,8 +378,9 @@ pub fn level_cfg(i: usize) -> LevelCfg {
             name: "白天 · 前院",
             subtitle: "适应草坪与阳光节奏",
             sun: 75,
-            waves: 6,
-            first_wave: 30.0,
+            waves: 4,
+            first_wave: 18.0,
+            flag_wave: 0,
             gaps: &GAPS_A,
             tint: (0, 0, 0, 0.0),
             pool: &POOL_A,

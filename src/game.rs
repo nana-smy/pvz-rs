@@ -304,7 +304,7 @@ impl Game {
         self.win_delay = 0.0;
         self.kills = 0;
         self.planted = 0;
-        self.sun_timer = 5.0;
+        self.sun_timer = 4.5;
         self.rng = Rng::new(
             (js_sys::Date::now() as u64) ^ 0x51_7c_c1_b7_2d_12_9f_3d,
         );
@@ -357,7 +357,7 @@ impl Game {
     fn update_suns(&mut self, dt: f32) {
         self.sun_timer -= dt;
         if self.sun_timer <= 0.0 && self.level != 2 {
-            self.sun_timer = self.rng.f(7.5, 11.0);
+            self.sun_timer = self.rng.f(4.25, 7.0);
             let x = self.rng.f(GRID_X + 30.0, GRID_X + 9.0 * CELL_W - 30.0);
             let ty = self.rng.f(GRID_Y + 70.0, LAWN_BOTTOM - 40.0);
             self.suns.push(Sun {
@@ -445,7 +445,7 @@ impl Game {
                     PlantKind::Sunflower => {
                         p.timer -= dt;
                         if p.timer <= 0.0 {
-                            p.timer = 20.0;
+                            p.timer = 25.0;
                             sun_spawns.push((cx + 26.0, gy - 86.0));
                         }
                     }
@@ -455,7 +455,7 @@ impl Game {
                             .iter()
                             .any(|z| z.row == p.row && !z.dying && z.x > cx + 6.0 && z.x < W + 30.0);
                         if has_target && p.timer <= 0.0 {
-                            p.timer = 1.7;
+                            p.timer = 1.5;
                             for dr in -1i32..=1 {
                                 let r = (p.row as i32 + dr).clamp(0, ROWS as i32 - 1) as usize;
                                 peas.push(Pea {
@@ -464,7 +464,7 @@ impl Game {
                                     row: r,
                                     dmg: 20.0,
                                     slow: false,
-                                    vx: 430.0,
+                                    vx: 333.0,
                                     t: 0.6,
                                     pk: 0,
                                 });
@@ -478,7 +478,7 @@ impl Game {
                             .iter()
                             .any(|z| z.row == p.row && !z.dying && z.x > cx + 6.0 && z.x < W + 30.0);
                         if has_target && p.timer <= 0.0 {
-                            p.timer = if p.kind == PlantKind::Repeater { 1.55 } else { 1.45 };
+                            p.timer = 1.5;
                             let px = cx + 34.0;
                             let py = gy - 52.0;
                             peas.push(Pea {
@@ -487,7 +487,7 @@ impl Game {
                                 row: p.row,
                                 dmg: 20.0,
                                 slow: p.kind == PlantKind::SnowPea,
-                                vx: 430.0,
+                                vx: 333.0,
                                 t: 0.0,
                                 pk: if p.kind == PlantKind::SnowPea { 1 } else { 0 },
                             });
@@ -498,7 +498,7 @@ impl Game {
                                     row: p.row,
                                     dmg: 20.0,
                                     slow: false,
-                                    vx: 430.0,
+                                    vx: 333.0,
                                     t: -0.14,
                                     pk: 0,
                                 });
@@ -588,7 +588,7 @@ impl Game {
                         p.timer -= dt;
                         let has_target = zombies.iter().any(|z| !z.dying && z.x < W + 30.0);
                         if has_target && p.timer <= 0.0 {
-                            p.timer = 2.4;
+                            p.timer = 1.5;
                             p.anim = 0.16;
                             for dr in -1i32..=1 {
                                 let r = (p.row as i32 + dr).clamp(0, ROWS as i32 - 1) as usize;
@@ -596,7 +596,7 @@ impl Game {
                                     x: cx,
                                     y: row_ground(r) - 48.0,
                                     row: r,
-                                    dmg: 15.0,
+                                    dmg: 20.0,
                                     slow: false,
                                     vx: 380.0,
                                     t: 9.0,
@@ -607,7 +607,7 @@ impl Game {
                                 x: cx,
                                 y: gy - 48.0,
                                 row: p.row,
-                                dmg: 15.0,
+                                dmg: 20.0,
                                 slow: false,
                                 vx: -300.0,
                                 t: 9.0,
@@ -619,7 +619,7 @@ impl Game {
                     PlantKind::Spikeweed => {
                         p.timer -= dt;
                         if p.timer <= 0.0 {
-                            p.timer = 0.45;
+                            p.timer = 0.5;
                             spike_ticks.push((cx, p.row));
                         }
                     }
@@ -741,7 +741,7 @@ impl Game {
             let mut hit = false;
             for z in self.zombies.iter_mut() {
                 if z.row == row && !z.dying && (z.x - x).abs() < 40.0 {
-                    hurt_zombie(z, 12.0);
+                    hurt_zombie(z, 20.0);
                     hit = true;
                 }
             }
@@ -922,7 +922,7 @@ impl Game {
                     z.vaulted = true;
                     let px = GRID_X + plants[pi].col as f32 * CELL_W + 12.0;
                     z.x = px - 44.0;
-                    z.speed = 20.0;
+                    z.speed = self.rng.f(23.0, 37.0);
                     z.eating = false;
                     continue;
                 }
@@ -936,7 +936,7 @@ impl Game {
                 }
             } else {
                 z.eating = false;
-                let spd = z.speed * if slow { 0.45 } else { 1.0 };
+                let spd = z.speed * if slow { 0.5 } else { 1.0 };
                 z.x -= spd * dt;
             }
             if z.hp <= 0.0 {
@@ -1048,58 +1048,88 @@ impl Game {
         });
     }
 
-    fn pick_kind(&mut self, w: u32) -> ZombieKind {
+    fn is_flag_wave(&self, w: u32) -> bool {
+        self.cfg.flag_wave != 0 && w == self.cfg.flag_wave
+    }
+
+    /// 原版 1073 的波次点数：`aWave / 3 + 1`，旗帜波先乘 2.5。
+    fn wave_points(&self, w: u32) -> u32 {
+        let mut points = (w - 1) / 3 + 1;
+        if self.is_flag_wave(w) {
+            points = points * 5 / 2;
+        }
+        points
+    }
+
+    /// 在剩余点数内按原版权重挑选僵尸；随波次逐步放开本关僵尸池。
+    fn pick_kind(&mut self, w: u32, budget: &mut u32) -> Option<ZombieKind> {
         let full = self.cfg.pool;
         if full.is_empty() {
-            return ZombieKind::Basic;
+            return None;
         }
-        // 按波次逐段解锁，避免第一波就混进橄榄球/铁桶
-        let unlocked = if w <= 2 {
-            1
-        } else if w <= 4 {
-            2
-        } else if w <= 6 {
-            3
-        } else {
-            full.len()
-        };
-        let pool = &full[..unlocked.min(full.len())];
-        if pool.len() == 1 {
-            return pool[0];
+        let waves = self.cfg.waves.max(1) as usize;
+        let unlocked = (((w as usize - 1) * full.len()) / waves + 1).min(full.len());
+
+        let mut candidates: Vec<(ZombieKind, u32)> = Vec::new();
+        let mut total = 0u32;
+        for &kind in &full[..unlocked] {
+            if kind == ZombieKind::Flag || kind.wave_value() > *budget {
+                continue;
+            }
+            let weight = kind.pick_weight().max(1);
+            candidates.push((kind, weight));
+            total += weight;
         }
-        let r = self.rng.f(0.0, 1.0);
-        if r < 0.42 {
-            pool[0]
-        } else if r < 0.72 {
-            pool[1]
-        } else if pool.len() > 2 {
-            pool[2 + self.rng.range(pool.len() - 2)]
-        } else {
-            pool[pool.len() - 1]
+        if candidates.is_empty() {
+            return None;
         }
+
+        let mut roll = self.rng.f(0.0, total as f32);
+        for (kind, weight) in candidates {
+            if roll < weight as f32 {
+                *budget -= kind.wave_value();
+                return Some(kind);
+            }
+            roll -= weight as f32;
+        }
+        None
     }
 
     fn start_wave(&mut self) {
         self.wave += 1;
         let w = self.wave;
-        let counts = [1u32, 1, 1, 2, 2, 3, 3, 4, 5, 6];
-        let base = counts[(w - 1) as usize % 10];
-        let count = base + u32::from(w == self.cfg.waves);
+        let flag = self.is_flag_wave(w);
+        let mut budget = self.wave_points(w);
         let mut items: Vec<(f32, ZombieKind, usize)> = Vec::new();
-        let mid = self.cfg.waves / 2 + 1;
-        if w == mid || w == self.cfg.waves {
+
+        // 零售 1073 的旗帜波：先放 min(点数, 8) 只普通僵尸，再放旗帜僵尸。
+        if flag {
+            let plain = budget.min(8);
+            for _ in 0..plain {
+                budget -= ZombieKind::Basic.wave_value();
+                items.push((self.rng.f(0.1, 0.6), ZombieKind::Basic, self.rng.range(ROWS)));
+            }
             items.push((0.2, ZombieKind::Flag, self.rng.range(ROWS)));
         }
-        for i in 0..count {
-            let kind = self.pick_kind(w);
-            let row = if w <= 2 { 1 + self.rng.range(3) } else { self.rng.range(ROWS) };
-            let delay = if w >= 10 {
-                i as f32 * 0.52 + self.rng.f(0.0, 0.5)
-            } else {
-                i as f32 * 0.72 + self.rng.f(0.0, 1.1)
+
+        while budget > 0 {
+            let Some(kind) = self.pick_kind(w, &mut budget) else {
+                break;
             };
-            items.push((delay, kind, row));
+            let idx = items.len();
+            items.push((0.15 + idx as f32 * 0.42 + self.rng.f(0.0, 0.9), kind, self.rng.range(ROWS)));
         }
+
+        // 冒险关末波补齐本关允许但还没出场的僵尸，和原版 PutInMissingZombies 一致。
+        if w == self.cfg.waves {
+            for &kind in self.cfg.pool {
+                if !items.iter().any(|(_, k, _)| *k == kind) {
+                    let idx = items.len();
+                    items.push((0.2 + idx as f32 * 0.45 + self.rng.f(0.0, 0.6), kind, self.rng.range(ROWS)));
+                }
+            }
+        }
+
         for (delay, kind, row) in items {
             self.pending.push(Pending {
                 at: self.elapsed + delay,
@@ -1107,27 +1137,25 @@ impl Game {
                 row,
             });
         }
+
         let text = if w == self.cfg.waves {
-            "最后一大波僵尸来袭！"
-        } else if w == mid {
-            "一大波僵尸正在接近！"
+            "最后一大波僵尸来袭！".to_string()
+        } else if flag {
+            "一大波僵尸正在接近！".to_string()
         } else {
-            "第 %d 波僵尸来袭"
-        };
-        let text = if text.contains("%d") {
             format!("第 {} 波僵尸来袭", w)
-        } else {
-            text.to_string()
         };
         self.banner = Some((text, 2.8));
-        if w == mid || w == self.cfg.waves {
+        if flag {
             self.sfx.horn();
         }
+
         self.next_wave_at = if w >= self.cfg.waves {
             f32::MAX
+        } else if self.is_flag_wave(w + 1) {
+            self.elapsed + 45.0
         } else {
-            let gaps = self.cfg.gaps;
-            self.elapsed + gaps[(w - 1) as usize % gaps.len()]
+            self.elapsed + 25.0 + self.rng.f(0.0, 6.0)
         };
     }
 
@@ -1153,7 +1181,7 @@ impl Game {
                 x: W + 40.0 + self.rng.f(0.0, 90.0),
                 hp: kind.hp(),
                 max_hp: kind.hp(),
-                speed: kind.speed(),
+                speed: self.rng.f(kind.speed_range().0, kind.speed_range().1),
                 t: self.rng.f(0.0, 5.0),
                 slow: 0.0,
                 eating: false,
@@ -1386,12 +1414,12 @@ impl Game {
             max_hp: kind.hp(),
             t: 0.0,
             timer: match kind {
-                PlantKind::Sunflower => 5.5,
+                PlantKind::Sunflower => self.rng.f(3.0, 12.5),
                 PlantKind::Peashooter | PlantKind::SnowPea | PlantKind::Repeater => 0.25,
                 PlantKind::Cabbage | PlantKind::Starfruit => 0.25,
                 PlantKind::Spikeweed => 0.45,
                 PlantKind::Threepeater => 0.4,
-                PlantKind::PotatoMine => 14.0,
+                PlantKind::PotatoMine => 15.0,
                 PlantKind::Squash => -1.0,
                 _ => 0.0,
             },

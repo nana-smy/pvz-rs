@@ -30,6 +30,17 @@ def build(name, base, dirs):
 
 
 if __name__ == '__main__':
+    build_ui = ['bg/day.webp', 'plants/sunflower.webp', 'plants/peashooter.webp', 'plants/wallnut.webp', 'plants/cherrybomb.webp', 'plants/snowpea.webp', 'projectiles/pea.webp']
+    path = os.path.join(OUT, 'assets-ui.tar')
+    with tarfile.open(path, 'w', format=tarfile.USTAR_FORMAT) as tar:
+        for rel in build_ui:
+            p = os.path.join(ROOT, 'assets-webp', rel)
+            ti = tar.gettarinfo(p, arcname='assets/' + rel)
+            ti.uid = ti.gid = 0
+            ti.uname = ti.gname = ''
+            with open(p, 'rb') as fh:
+                tar.addfile(ti, fh)
+    print('assets-ui.tar', os.path.getsize(path))
     build('assets-core.tar', os.path.join(ROOT, 'assets-webp'), ['plants', 'bg', 'projectiles'])
     build('assets-zombies.tar', os.path.join(ROOT, 'assets-webp'), ['zombies'])
     build('assets-audio.tar', os.path.join(ROOT, 'assets'), ['audio'])

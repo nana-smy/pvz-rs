@@ -344,7 +344,7 @@
     }
   };
   const loadingText = document.querySelector('#loader p');
-  const ASSET_PACK = './assets-core.tar';
+  const ASSET_PACK = './assets-ui.tar';
   const packUrls = new Map();
   const assetUrl = (p) => packUrls.get(String(p).replace(/^\.\//, '')) || p;
   const mimeOf = (p) => {
@@ -380,12 +380,12 @@
     let lastErr = null;
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        loadingText.textContent = '正在加载核心素材包（约 5MB）…';
+        loadingText.textContent = '正在加载首屏素材（约 170KB）…';
         const r = await fetch(packUrl + '?v=__ASSET_VERSION__&r=' + attempt, { cache: 'force-cache' });
         if (!r.ok) throw new Error('HTTP ' + r.status);
         const buf = await r.arrayBuffer();
         const files = untar(buf);
-        if (files.size < 40) throw new Error('素材包不完整: ' + files.size);
+        if (files.size < 5) throw new Error('素材包不完整: ' + files.size);
         console.log('[pvz] 素材包解包完成', files.size, '个文件');
         return files;
       } catch (e) {
@@ -447,11 +447,12 @@
     jobs.push({ run: () => loadOne(key, src).then(resolve) });
     pump();
   });
-  // 植物、卡面与背景必须齐全后再进游戏；僵尸帧仍可迟到，由 Rust 侧按需拾取。
+  // 首屏只等主菜单需要的几张图；49 张卡面与地图背景随后由核心包补齐。
+  const UI_KEYS = new Set(['bg_day', 'sunflower', 'peashooter', 'wallnut', 'cherrybomb', 'snowpea', 'pea']);
   const coreImages = Promise.all(Object.entries(IMG_SRC)
-    .filter(([k]) => !k.startsWith('z_'))
+    .filter(([k]) => UI_KEYS.has(k))
     .map(([k, v]) => enqueue(k, v)));
-  await Promise.race([coreImages, new Promise((r) => setTimeout(r, 10000))]);
+  await Promise.race([coreImages, new Promise((r) => setTimeout(r, 6000))]);
   // 音频与僵尸帧分两个包在后台加载，不阻塞主菜单与选卡。
   const packLater = async (url, min, after) => {
     try {
@@ -461,6 +462,9 @@
       if (after) after(files);
     } catch (e) { console.warn('[pvz] 后台素材包失败', url, e); }
   };
+  packLater('./assets-core.tar', 40, () => {
+    Object.entries(IMG_SRC).filter(([k]) => !k.startsWith('z_') && !UI_KEYS.has(k)).forEach(([k, v]) => enqueue(k, v));
+  });
   packLater('./assets-audio.tar', 10, () => {
     for (const k of Object.keys(SFX_SRC)) {
       const p = SFX_SRC[k].replace(/^\.\//, '');

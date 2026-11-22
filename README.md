@@ -63,7 +63,7 @@
 - **Rust** 负责全部游戏逻辑（状态机、波次、碰撞、经济、音效触发）
 - **wasm-bindgen + web-sys** 做浏览器绑定
 - **Canvas 2D** 渲染，无 WebGL 依赖
-- **原版素材**：`assets/plants/` 十四种植物立绘，`assets/zombies/` 七种僵尸整身拼装图，`assets/bg/` 三套前院背景，`assets/audio/` 原版 WAV 音效与循环 BGM（经素材提供方授权使用）
+- **原版素材**：`assets/plants/` 十四种植物立绘，`assets/zombies/` 八种僵尸各 16 帧原版 reanim 行走循环，`assets/bg/` 三套前院背景，`assets/audio/` 原版 WAV 音效与循环 BGM（经素材提供方授权使用）
 - **WebAudio** 作为缺失音效时的合成回退
 - 逻辑分辨率 1280×720，页面按 16:9 等比缩放，支持窗口尺寸变化
 
@@ -98,7 +98,7 @@ python3 -m http.server 8765 --directory dist
 
 ## 素材说明
 
-`assets/plants/` 与 `assets/audio/` 为素材提供方授权使用的《植物大战僵尸》原版资源，仅用于本项目展示；版权归原权利人所有。素材包内没有普通/路障/铁桶/旗帜僵尸的完整动画帧或全尸立绘，因此僵尸仍由代码绘制。
+`assets/plants/` 与 `assets/audio/` 为素材提供方授权使用的《植物大战僵尸》原版资源，仅用于本项目展示；版权归原权利人所有。僵尸行走帧由原版 `Zombie.reanim`、`Zombie_ladder.reanim` 等烘焙，每类 16 帧循环；没有素材时才回退到代码绘制。
 
 ## License
 

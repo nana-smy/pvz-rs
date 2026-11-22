@@ -16,6 +16,10 @@ python3 tools/pack_assets.py
 # 每次构建写入独立版本号，避免浏览器/CDN 继续使用旧植物与僵尸贴图
 ASSET_VERSION="$(git rev-parse --short HEAD 2>/dev/null || date +%Y%m%d%H%M%S)"
 sed -i "s/__ASSET_VERSION__/${ASSET_VERSION}/g" dist/index.html
+# 分包文件名带版本号：GitHub Pages CDN 曾缓存过被截断的旧 tar
+for i in 0 1; do
+  [ -f "dist/assets-reanim-$i.tar" ] && mv "dist/assets-reanim-$i.tar" "dist/assets-reanim-$i-${ASSET_VERSION}.tar"
+done
 cp -r assets dist/assets
 cp -r assets-webp/. dist/assets/
 touch dist/.nojekyll

@@ -299,7 +299,7 @@
         finish();
       };
       img.onerror = finish;
-      img.src = src.startsWith('data:') ? src : src + '?v=live701';
+      img.src = src.startsWith('data:') ? src : src + '?v=__ASSET_VERSION__';
     });
   // 素材并行加载；最多等 2.5 秒就开始游戏，迟到图片由 Rust 侧按需拾取
   const allImages = Promise.all(Object.entries(IMG_SRC).map(([k, v]) => loadOne(k, v)));

@@ -1096,9 +1096,18 @@ fn draw_zombie(p: &P, z: &Zombie, time: f32, h: f32) {
         let bob = walk * 1.4;
         let lean = if z.eating { -0.05 } else { 0.0 };
         p.c.rotate(lean as f64);
-        let scale = 0.40;
+        let target_h = match z.kind {
+            ZombieKind::Gargantuar => 330.0,
+            ZombieKind::Boss => 380.0,
+            ZombieKind::Bungee => 300.0,
+            ZombieKind::Imp => 150.0,
+            ZombieKind::Zomboni | ZombieKind::Catapult => 290.0,
+            ZombieKind::Bobsled | ZombieKind::DolphinRider => 250.0,
+            _ => 236.0,
+        };
+        let scale = target_h / img.height().max(1) as f32;
         let w = img.width() as f32 * scale;
-        let h = img.height() as f32 * scale;
+        let h = target_h;
         let foot_pad = 0.0;
         let _ = p.c.draw_image_with_html_image_element_and_dw_and_dh(
             &img,

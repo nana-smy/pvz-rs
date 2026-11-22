@@ -63,7 +63,7 @@
 - **Rust** 负责全部游戏逻辑（状态机、波次、碰撞、经济、音效触发）
 - **wasm-bindgen + web-sys** 做浏览器绑定
 - **Canvas 2D** 渲染，无 WebGL 依赖
-- **原版素材**：`assets/plants/` 十四种植物立绘，`assets/zombies/` 八种僵尸各 16 帧原版 reanim 行走循环，`assets/bg/` 三套前院背景，`assets/audio/` 原版 WAV 音效与循环 BGM（经素材提供方授权使用）
+- **原版素材**：`assets/plants/` 十四种完整植物卡立绘（土豆雷含土堆与红色引信，双发/寒冰保留炮口），`assets/zombies/` 八种僵尸各 16 帧原版 reanim 行走循环，`assets/bg/` 三套前院背景，`assets/audio/` 原版 WAV 音效与循环 BGM（经素材提供方授权使用）
 - **WebAudio** 作为缺失音效时的合成回退
 - 逻辑分辨率 1280×720，页面按 16:9 等比缩放，支持窗口尺寸变化
 

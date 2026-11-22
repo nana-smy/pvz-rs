@@ -344,7 +344,7 @@
     }
   };
   const loadingText = document.querySelector('#loader p');
-  const ASSET_PACK = './assets.tar';
+  const ASSET_PACK = './assets-core.tar';
   const packUrls = new Map();
   const assetUrl = (p) => packUrls.get(String(p).replace(/^\.\//, '')) || p;
   const mimeOf = (p) => {
@@ -376,16 +376,16 @@
     }
     return out;
   }
-  async function fetchAssetPack() {
+  async function fetchAssetPack(packUrl = ASSET_PACK) {
     let lastErr = null;
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        loadingText.textContent = '正在加载素材包（单文件，约 26MB）…';
-        const r = await fetch(ASSET_PACK + '?v=__ASSET_VERSION__&r=' + attempt, { cache: 'force-cache' });
+        loadingText.textContent = '正在加载核心素材包（约 5MB）…';
+        const r = await fetch(packUrl + '?v=__ASSET_VERSION__&r=' + attempt, { cache: 'force-cache' });
         if (!r.ok) throw new Error('HTTP ' + r.status);
         const buf = await r.arrayBuffer();
         const files = untar(buf);
-        if (files.size < 150) throw new Error('素材包不完整: ' + files.size);
+        if (files.size < 40) throw new Error('素材包不完整: ' + files.size);
         console.log('[pvz] 素材包解包完成', files.size, '个文件');
         return files;
       } catch (e) {
@@ -429,10 +429,6 @@
   try {
     const packed = await fetchAssetPack();
     packed.forEach((u, k) => packUrls.set(k, u));
-    for (const k of Object.keys(SFX_SRC)) {
-      const p = SFX_SRC[k].replace(/^\.\//, '');
-      if (packUrls.has(p)) SFX_SRC[k] = packUrls.get(p);
-    }
   } catch (e) {
     loadingText.textContent = '素材包加载失败，回退逐个加载…';
     console.error('[pvz] 单包失败，回退散资源', e);
@@ -456,8 +452,28 @@
     .filter(([k]) => !k.startsWith('z_'))
     .map(([k, v]) => enqueue(k, v)));
   await Promise.race([coreImages, new Promise((r) => setTimeout(r, 10000))]);
-  // 战斗素材随后排队加载，不阻塞选卡界面。
-  Object.entries(IMG_SRC).filter(([k]) => k.startsWith('z_')).forEach(([k, v]) => enqueue(k, v));
+  // 音频与僵尸帧分两个包在后台加载，不阻塞主菜单与选卡。
+  const packLater = async (url, min, after) => {
+    try {
+      const files = await fetchAssetPack(url);
+      if (files.size < min) throw new Error('包不完整 ' + files.size);
+      files.forEach((u, k) => packUrls.set(k, u));
+      if (after) after(files);
+    } catch (e) { console.warn('[pvz] 后台素材包失败', url, e); }
+  };
+  packLater('./assets-audio.tar', 10, () => {
+    for (const k of Object.keys(SFX_SRC)) {
+      const p = SFX_SRC[k].replace(/^\.\//, '');
+      if (packUrls.has(p)) SFX_SRC[k] = packUrls.get(p);
+    }
+    if (typeof bgm !== 'undefined') {
+      const m = packUrls.get('audio/music.mp3');
+      if (m && bgm) bgm.src = m;
+    }
+  });
+  packLater('./assets-zombies.tar', 100, () => {
+    Object.entries(IMG_SRC).filter(([k]) => k.startsWith('z_')).forEach(([k, v]) => enqueue(k, v));
+  });
 
   function fit() {
     const pad = window.innerWidth > 900 ? 18 : 0;

@@ -1330,6 +1330,15 @@ impl Game {
                     break;
                 }
             }
+            let pass_over = match z.kind {
+                ZombieKind::Balloon => z.hp > z.max_hp * 0.55,
+                ZombieKind::Pogo => z.x > 250.0,
+                ZombieKind::Digger => z.x > 300.0,
+                _ => false,
+            };
+            if pass_over {
+                target = None;
+            }
             if target.is_none() {
                 target = base_target;
             }
@@ -1353,7 +1362,13 @@ impl Game {
                 }
                 z.eating = true;
                 z.eat_t += dt;
-                let dmg = 55.0 * dt * if slow { 0.5 } else { 1.0 };
+                let crush = match z.kind {
+                    ZombieKind::Gargantuar => 1000.0,
+                    ZombieKind::Zomboni => 600.0,
+                    ZombieKind::Bobsled => 450.0,
+                    _ => 55.0,
+                };
+                let dmg = crush * dt * if slow { 0.5 } else { 1.0 };
                 plants[pi].hp -= dmg;
                 plants[pi].flash = 1.0;
                 if (z.eat_t * 2.0) as i32 % 2 == 0 && z.eat_t < 0.2 {

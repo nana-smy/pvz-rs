@@ -3,7 +3,27 @@ use crate::defs::*;
 use crate::game::{Game, Mower, PKind, Particle, Plant, State, Sun, SunState, Zombie};
 use std::f64::consts::PI;
 use std::f32::consts::TAU;
-use web_sys::CanvasRenderingContext2d;
+use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
+
+fn draw_img_rect(c: &CanvasRenderingContext2d, img: &HtmlImageElement, sx: f64, sy: f64, sw: f64, sh: f64, dx: f64, dy: f64, dw: f64, dh: f64) {
+    use wasm_bindgen::{JsCast, JsValue};
+    if let Ok(f) = js_sys::Reflect::get(c.as_ref(), &JsValue::from_str("drawImage"))
+        .and_then(|v| v.dyn_into::<js_sys::Function>())
+    {
+        let _ = f.call9(
+            c.as_ref(),
+            img.as_ref(),
+            &JsValue::from_f64(sx),
+            &JsValue::from_f64(sy),
+            &JsValue::from_f64(sw),
+            &JsValue::from_f64(sh),
+            &JsValue::from_f64(dx),
+            &JsValue::from_f64(dy),
+            &JsValue::from_f64(dw),
+            &JsValue::from_f64(dh),
+        );
+    }
+}
 
 pub struct P<'a> {
     pub c: &'a CanvasRenderingContext2d,
@@ -480,7 +500,7 @@ fn draw_plant(p: &P, pl: &Plant, time: f32) {
     p.c.translate(cx as f64, base as f64);
     p.c.scale(s as f64, s as f64);
     p.c.translate(-cx as f64, -base as f64);
-    draw_plant_kind(p, pl.kind, cx, base, time, ratio, pl.fuse, pl.anim);
+    draw_plant_anim(p, pl.kind, cx, base, time, ratio, pl.fuse, pl.anim);
     p.restore();
 }
 
@@ -585,14 +605,8 @@ fn draw_plant_kind(p: &P, kind: PlantKind, cx: f32, base: f32, t: f32, hp: f32, 
     }
 }
 
-fn draw_art_plant(p: &P, kind: PlantKind, art: Art, cx: f32, base: f32, t: f32, hp: f32, fuse: f32, anim: f32) -> bool {
-    let Some(img) = assets::image(art) else { return false };
-    let ih = img.height() as f32;
-    let iw = img.width() as f32;
-    if ih <= 0.0 {
-        return false;
-    }
-    let h = match art {
+fn art_height(art: Art) -> f32 {
+    match art {
         Art::Sunflower => 116.0,
         Art::Peashooter => 108.0,
         Art::Repeater => 108.0,
@@ -607,7 +621,88 @@ fn draw_art_plant(p: &P, kind: PlantKind, art: Art, cx: f32, base: f32, t: f32, 
         Art::Starfruit => 86.0,
         Art::Garlic => 80.0,
         Art::Spikeweed => 42.0,
+    }
+}
+
+// 原版 reanim 烘焙帧：身体、头、叶片、嘴分别按各自的骨骼变换合成。
+// 射击时用 anim_shooting，嘴部开合和头部后坐都来自原版轨道，而不是整张图平移。
+fn draw_anim_plant(p: &P, kind: PlantKind, art: Art, cx: f32, base: f32, t: f32, hp: f32, fuse: f32, anim: f32) -> bool {
+    let idx = art as usize;
+    let shooting = anim > 0.0 && crate::plant_anim::SHOOT[idx].frames > 0;
+    let clip = if shooting {
+        crate::plant_anim::SHOOT[idx]
+    } else {
+        crate::plant_anim::IDLE[idx]
     };
+    let Some(img) = assets::plant_sheet(art, shooting) else { return false };
+    let idle = crate::plant_anim::IDLE[idx];
+    if clip.frames == 0 || clip.w <= 0.0 || clip.h <= 0.0 || idle.h <= 0.0 {
+        return false;
+    }
+    let h = art_height(art);
+    let scale = h / idle.h;
+    let dw = clip.w * scale;
+    let dh = clip.h * scale;
+    let n = clip.frames;
+    let frame = if shooting {
+        let dur = if art == Art::Starfruit { 0.16 } else { 0.20 };
+        let progress = (1.0 - (anim / dur).clamp(0.0, 1.0)) * n as f32;
+        (progress as u32).min(n - 1)
+    } else {
+        (((t + idx as f32 * 0.17) * 12.0) as u32) % n
+    };
+    let pulse = if kind == PlantKind::Cherry && fuse < 0.55 {
+        1.0 + (t * 16.0).sin().abs() * 0.10
+    } else {
+        1.0
+    };
+    p.save();
+    let yoff = if art == Art::PotatoMine { 8.0 } else { 0.0 };
+    // 单元四周各有 4px 烘焙留白，把留白折算到地面，避免整株悬空。
+    p.c.translate(cx as f64, (base + yoff + 4.0 * scale) as f64);
+    p.c.scale(pulse as f64, pulse as f64);
+    let sx = (frame * clip.w as u32) as f64;
+    draw_img_rect(
+        p.c,
+        &img,
+        sx,
+        0.0,
+        clip.w as f64,
+        clip.h as f64,
+        (-dw * 0.5) as f64,
+        -dh as f64,
+        dw as f64,
+        dh as f64,
+    );
+    if kind == PlantKind::WallNut && hp < 0.7 {
+        let a = (0.7 - hp) / 0.7;
+        p.line(&[(-dw*0.22, -dh*0.72), (-dw*0.05, -dh*0.5), (-dw*0.16, -dh*0.36)], 2.0, rgba(70,40,15, 0.55*a));
+        p.line(&[(dw*0.18, -dh*0.3), (dw*0.02, -dh*0.18), (dw*0.12, -dh*0.05)], 2.2, rgba(70,40,15, 0.5*a));
+        if hp < 0.35 {
+            p.line(&[(-dw*0.3, -dh*0.4), (-dw*0.12, -dh*0.26)], 2.4, rgba(60,32,10, 0.6));
+        }
+    }
+    p.restore();
+    true
+}
+
+fn draw_plant_anim(p: &P, kind: PlantKind, cx: f32, base: f32, t: f32, hp: f32, fuse: f32, anim: f32) {
+    if let Some(art) = art_of(kind) {
+        if draw_anim_plant(p, kind, art, cx, base, t, hp, fuse, anim) {
+            return;
+        }
+    }
+    draw_plant_kind(p, kind, cx, base, t, hp, fuse, anim);
+}
+
+fn draw_art_plant(p: &P, kind: PlantKind, art: Art, cx: f32, base: f32, t: f32, hp: f32, fuse: f32, anim: f32) -> bool {
+    let Some(img) = assets::image(art) else { return false };
+    let ih = img.height() as f32;
+    let iw = img.width() as f32;
+    if ih <= 0.0 {
+        return false;
+    }
+    let h = art_height(art);
     let w = h * iw / ih;
     let bob = (t * 2.1).sin() * 1.6;
     let sway = (t * 1.25).sin() * 0.012;
@@ -1519,7 +1614,7 @@ fn draw_menu(p: &P, g: &Game) {
         p.save();
         p.c.translate(cx as f64, 672.0);
         p.c.scale(0.86, 0.86);
-        draw_plant_kind(p, kind, 0.0, 0.0, g.time + t, 1.0, 1.0, 0.0);
+        draw_plant_anim(p, kind, 0.0, 0.0, g.time + t, 1.0, 1.0, 0.0);
         p.restore();
     }
 

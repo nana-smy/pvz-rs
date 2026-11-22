@@ -63,7 +63,7 @@
 - **Rust** 负责全部游戏逻辑（状态机、波次、碰撞、经济、音效触发）
 - **wasm-bindgen + web-sys** 做浏览器绑定
 - **Canvas 2D** 渲染，无 WebGL 依赖
-- **原版素材**：`assets/plants/` 十四种完整植物卡立绘（土豆雷含土堆与红色引信，双发/寒冰保留炮口），`assets/zombies/` 八种僵尸各 16 帧原版 reanim 行走循环，`assets/bg/` 三套前院背景，`assets/audio/` 原版 WAV 音效与循环 BGM（经素材提供方授权使用）
+- **原版素材**：`assets/plants/` 十四种完整植物卡立绘；`assets/plants/reanim/` 从原版 `SunFlower`、`PeaShooterSingle`、`PeaShooter`、`SnowPea`、`Caltrop` 等 reanim 逐帧烘焙的待机/开火精灵表（头、身、叶片、嘴分层合成）；`assets/zombies/` 八种僵尸各 16 帧原版 reanim 行走循环，`assets/bg/` 三套前院背景，`assets/audio/` 原版 WAV 音效与循环 BGM（经素材提供方授权使用）
 - **WebAudio** 作为缺失音效时的合成回退
 - 逻辑分辨率 1280×720，页面按 16:9 等比缩放，支持窗口尺寸变化
 
@@ -72,7 +72,7 @@
 ```
 src/defs.rs     常量、数值、UI 布局
 src/game.rs     游戏状态机与全部玩法逻辑
-src/render.rs   Canvas 2D 绘制（优先绘制原版植物立绘）
+src/render.rs   Canvas 2D 绘制（战斗内优先播放原版植物 reanim 烘焙帧）
 src/assets.rs   原版图片资源句柄
 src/sfx.rs      原版音效播放 + WebAudio 合成回退
 src/main.rs     wasm 入口、输入事件、requestAnimationFrame 主循环
@@ -98,7 +98,7 @@ python3 -m http.server 8765 --directory dist
 
 ## 素材说明
 
-`assets/plants/` 与 `assets/audio/` 为素材提供方授权使用的《植物大战僵尸》原版资源，仅用于本项目展示；版权归原权利人所有。僵尸行走帧由原版 `Zombie.reanim`、`Zombie_ladder.reanim` 等烘焙，每类 16 帧循环；没有素材时才回退到代码绘制。
+`assets/plants/` 卡立绘、`assets/plants/reanim/` 动画帧与 `assets/audio/` 为素材提供方授权使用的《植物大战僵尸》原版资源，仅用于本项目展示；版权归原权利人所有。14 套待机帧与 5 套开火帧均由原版 reanim 逐帧烘焙，保留独立头/身/嘴轨道；`assets/zombies/` 行走帧由原版 `Zombie.reanim`、`Zombie_ladder.reanim` 等烘焙，每类 16 帧循环；没有素材时才回退到代码绘制。
 
 ## License
 

@@ -1,0 +1,144 @@
+{
+  "sunflower": {
+    "idle": {
+      "key": "pf_sunflower_idle",
+      "frames": 25,
+      "w": 83,
+      "h": 83
+    }
+  },
+  "peashooter": {
+    "idle": {
+      "key": "pf_peashooter_idle",
+      "frames": 25,
+      "w": 83,
+      "h": 80
+    },
+    "shoot": {
+      "key": "pf_peashooter_shoot",
+      "frames": 25,
+      "w": 80,
+      "h": 52
+    }
+  },
+  "repeater": {
+    "idle": {
+      "key": "pf_repeater_idle",
+      "frames": 25,
+      "w": 83,
+      "h": 78
+    },
+    "shoot": {
+      "key": "pf_repeater_shoot",
+      "frames": 25,
+      "w": 82,
+      "h": 52
+    }
+  },
+  "snowpea": {
+    "idle": {
+      "key": "pf_snowpea_idle",
+      "frames": 25,
+      "w": 81,
+      "h": 80
+    },
+    "shoot": {
+      "key": "pf_snowpea_shoot",
+      "frames": 25,
+      "w": 78,
+      "h": 52
+    }
+  },
+  "wallnut": {
+    "idle": {
+      "key": "pf_wallnut_idle",
+      "frames": 17,
+      "w": 85,
+      "h": 82
+    }
+  },
+  "cherrybomb": {
+    "idle": {
+      "key": "pf_cherrybomb_idle",
+      "frames": 13,
+      "w": 98,
+      "h": 78
+    }
+  },
+  "potatomine": {
+    "idle": {
+      "key": "pf_potatomine_idle",
+      "frames": 11,
+      "w": 104,
+      "h": 84
+    }
+  },
+  "jalapeno": {
+    "idle": {
+      "key": "pf_jalapeno_idle",
+      "frames": 7,
+      "w": 56,
+      "h": 85
+    }
+  },
+  "threepeater": {
+    "idle": {
+      "key": "pf_threepeater_idle",
+      "frames": 25,
+      "w": 63,
+      "h": 69
+    }
+  },
+  "squash": {
+    "idle": {
+      "key": "pf_squash_idle",
+      "frames": 19,
+      "w": 81,
+      "h": 98
+    }
+  },
+  "cabbagepult": {
+    "idle": {
+      "key": "pf_cabbagepult_idle",
+      "frames": 31,
+      "w": 105,
+      "h": 96
+    },
+    "shoot": {
+      "key": "pf_cabbagepult_shoot",
+      "frames": 38,
+      "w": 110,
+      "h": 116
+    }
+  },
+  "starfruit": {
+    "idle": {
+      "key": "pf_starfruit_idle",
+      "frames": 17,
+      "w": 86,
+      "h": 80
+    },
+    "shoot": {
+      "key": "pf_starfruit_shoot",
+      "frames": 17,
+      "w": 88,
+      "h": 80
+    }
+  },
+  "garlic": {
+    "idle": {
+      "key": "pf_garlic_idle",
+      "frames": 15,
+      "w": 69,
+      "h": 117
+    }
+  },
+  "spikeweed": {
+    "idle": {
+      "key": "pf_spikeweed_idle",
+      "frames": 21,
+      "w": 92,
+      "h": 44
+    }
+  }
+}

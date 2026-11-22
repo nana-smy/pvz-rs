@@ -1,6 +1,7 @@
 mod assets;
 mod defs;
 mod game;
+mod plant_anim;
 mod render;
 mod sfx;
 

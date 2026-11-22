@@ -64,6 +64,7 @@ thread_local! {
     static ZOMBIES: RefCell<Vec<Option<HtmlImageElement>>> = const { RefCell::new(Vec::new()) };
     static BGS: RefCell<Vec<Option<HtmlImageElement>>> = const { RefCell::new(Vec::new()) };
     static PROJ: RefCell<Vec<Option<HtmlImageElement>>> = const { RefCell::new(Vec::new()) };
+    static SHEETS: RefCell<Vec<Option<HtmlImageElement>>> = const { RefCell::new(Vec::new()) };
 }
 
 const Z_KEYS: [&str; 128] = [
@@ -268,8 +269,35 @@ pub fn image(art: Art) -> Option<HtmlImageElement> {
     got
 }
 
-pub fn projectile(kind: u8) -> Option<HtmlImageElement> {
-    let idx = (kind as usize).min(1);
+pub fn plant_sheet(art: Art, shoot: bool) -> Option<HtmlImageElement> {
+    let base = art as usize;
+    let clip = if shoot {
+        crate::plant_anim::SHOOT[base]
+    } else {
+        crate::plant_anim::IDLE[base]
+    };
+    if clip.key.is_empty() || clip.frames == 0 {
+        return None;
+    }
+    let idx = base + if shoot { 14 } else { 0 };
+    let cached = SHEETS.with(|m| m.borrow().get(idx).cloned().flatten());
+    if cached.is_some() {
+        return cached;
+    }
+    let got = live(clip.key);
+    if let Some(img) = &got {
+        SHEETS.with(|m| {
+            let mut v = m.borrow_mut();
+            if v.len() < 28 {
+                v.resize(28, None);
+            }
+            v[idx] = Some(img.clone());
+        });
+    }
+    got
+}
+
+pub fn projectile(kind: u8) -> Option<HtmlImageElement> {    let idx = (kind as usize).min(1);
     let cached = PROJ.with(|m| m.borrow().get(idx).cloned().flatten());
     if cached.is_some() {
         return cached;

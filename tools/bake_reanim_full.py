@@ -110,7 +110,7 @@ def get_img(image_id):
 
 TRACK_RE = re.compile(r'<track>(.*?)</track>', re.S)
 
-def parse(path):
+def parse(path, carry=False):
     text = open(path, encoding='utf-8', errors='ignore').read()
     tracks = []
     for raw in TRACK_RE.findall(text):
@@ -121,6 +121,7 @@ def parse(path):
         ts = re.findall(r'<t>(.*?)</t>', raw, re.S)
         states = []
         st = dict(i=None, x=0.0, y=0.0, a=0.0, sx=1.0, sy=1.0, kx=0.0, ky=0.0, f=None)
+        # 原版稀疏关键帧语义：没写的字段沿用上一帧，空 <t> 表示不变。
         for t in ts:
             for key in ('x', 'y', 'a', 'sx', 'sy', 'kx', 'ky', 'f'):
                 mm = re.search(r'<%s>([^<]+)</%s>' % (key, key), t)
@@ -282,11 +283,70 @@ def choose_range(tracks, names, total):
                     return r
     return 0, total - 1
 
+def _is_head_track(name, n):
+    return (name.startswith('anim_head%d' % n) or name.startswith('ThreePeater_head%d' % n)
+            or name.startswith('anim_face%d' % n) or name.startswith('ThreePeater_mouth%d' % n)
+            or name.startswith('ThreePeater_head%d' % n))
+
+def _draw_group(canvas, tracks, frame, include):
+    ox, oy = 1000, 1000
+    for name, states in reversed(tracks):
+        if not include(name):
+            continue
+        st = sample_state(states, frame)
+        if not st.get('i') or (st.get('f') is not None and st['f'] < 0):
+            continue
+        im = get_img(st['i'])
+        if im is None or abs(st['sx']) < 1e-4 or abs(st['sy']) < 1e-4:
+            continue
+        paste_part(canvas, im, st, 1.0, ox, oy)
+
+def draw_threepeater_frame(tracks, i):
+    # 原版三发是同一副身体 + 三组独立头层；三颗头分别取各自的头动画相位。
+    canvas = Image.new('RGBA', (2400, 2400), (0, 0, 0, 0))
+    body = lambda n: (not _is_head_track(n, 1) and not _is_head_track(n, 2)
+                      and not _is_head_track(n, 3)
+                      and not n.startswith('anim_shooting') and not n.startswith('anim_blink'))
+    _draw_group(canvas, tracks, 124, body)
+    _draw_group(canvas, tracks, 4 + (i % 38), lambda n: _is_head_track(n, 1))
+    _draw_group(canvas, tracks, 86 + (i % 37), lambda n: _is_head_track(n, 2))
+    _draw_group(canvas, tracks, 45 + (i % 38), lambda n: _is_head_track(n, 3))
+    return canvas
+
+def build_threepeater(src_name):
+    path = os.path.join(SRC, src_name + '.reanim')
+    tracks = parse(path, carry=True)
+    frames = [draw_threepeater_frame(tracks, i) for i in range(30)]
+    box = bbox_union(frames)
+    w, h = box[2] - box[0], box[3] - box[1]
+    ax, ay = 1000 - box[0], 1000 - box[1]
+    max_h = 260
+    k = min(1.0, max_h / float(h))
+    if k < 1.0:
+        w, h = max(1, int(round(w * k))), max(1, int(round(h * k)))
+        ax, ay = ax * k, ay * k
+    imgs = [f.crop(box) for f in frames]
+    if k < 1.0:
+        imgs = [im.resize((w, h), Image.BICUBIC) for im in imgs]
+    clips = {}
+    for cname in ('idle', 'shoot'):
+        sheet, cols, rows = grid_image(imgs, w, h, min(8, len(imgs)))
+        rel = 'reanim/threepeater/%s.webp' % cname
+        out = os.path.join(OUT, 'threepeater', cname + '.webp')
+        save_webp(sheet, out)
+        clips[cname] = dict(file=rel, frames=len(imgs), cols=cols, rows=rows,
+                            fps=float(FPS), bytes=os.path.getsize(out))
+    print('%-14s %-22s %dx%d clips=idle,shoot (3 head layers)' % ('threepeater', src_name, w, h))
+    return dict(w=float(w), h=float(h), ax=float(ax), ay=float(ay),
+                fps=FPS, scale=1.0, clips=clips)
+
 def build_reanim_role(role, src_name, clip_names, kind, hide=()):
     path = os.path.join(SRC, src_name + '.reanim')
     if not os.path.exists(path):
         print('MISSING', role, path)
         return None
+    if role == 'threepeater':
+        return build_threepeater(src_name)
     tracks = parse(path)
     total = max(len(st) for _, st in tracks)
     # 选出每个 clip 的区间
@@ -313,10 +373,12 @@ def build_reanim_role(role, src_name, clip_names, kind, hide=()):
     if base not in spec:
         base = next(iter(spec))
     s, e = spec[base]
-    sample = list(range(s, e + 1))
-    if len(sample) > 30:
-        sample = [s + round(i * (e - s) / 29) for i in range(30)]
-    base_frames = [draw_frame(tracks, f, hide) for f in sample]
+    # 包围盒必须覆盖整个基准动画段（含 pre-roll 之前的部分）。
+    # 只看 pre-roll 起点会把大嘴花这类“末尾才出现舌头”的角色裁成只剩茎叶。
+    span = list(range(0, e + 1))
+    if len(span) > 30:
+        span = [round(i * e / 29) for i in range(30)]
+    base_frames = [draw_frame(tracks, f, hide) for f in span]
     box = bbox_union(base_frames)
     w, h = box[2] - box[0], box[3] - box[1]
     ax, ay = 1000 - box[0], 1000 - box[1]
@@ -345,6 +407,74 @@ def build_reanim_role(role, src_name, clip_names, kind, hide=()):
     print('%-14s %-22s %dx%d clips=%s' % (role, src_name, w, h, ','.join(clips)))
     return dict(w=float(w), h=float(h), ax=float(ax), ay=float(ay),
                 fps=FPS, scale=1.0, clips=clips)
+
+HEAD_TRACK_KEYS = ('anim_head_idle', 'anim_face', 'idle_mouth', 'idle_headleaf',
+                   'idle_shoot_blink', 'anim_blink', 'PeaShooter_eyebrow', 'anim_shooting')
+
+
+def build_repeater(role='repeater'):
+    """原版 Repeater 没有独立 reanim，复用 PeaShooter.reanim。
+
+    该文件把 body/head 分别放在同一时间轴的不同段（body idle 79..103，
+    head shooting 54..78，head idle 29..53），运行时会叠一个只播
+    anim_head_idle 的头层。这里按原版分层合成：idle 用 79..103 全身段，
+    shoot 用 body 79..103 叠 head 54..78。
+    """
+    path = os.path.join(SRC, 'PeaShooter.reanim')
+    if not os.path.exists(path):
+        print('MISSING', role, path)
+        return None
+    tracks = parse(path)
+    head = [(n, st) for n, st in tracks if any(k in n for k in HEAD_TRACK_KEYS)]
+    body = [(n, st) for n, st in tracks if not any(k in n for k in HEAD_TRACK_KEYS)]
+
+    def comp(fb, fh):
+        c = draw_frame(body, fb)
+        c.alpha_composite(draw_frame(head, fh))
+        return c
+
+    pairs = [('idle', [(79 + i, None) for i in range(25)]),
+             ('shoot', [(79 + i, 54 + i) for i in range(25)])]
+    frames = {}
+    for cname, seq in pairs:
+        ims = [draw_frame(tracks, fb) if fh is None else comp(fb, fh)
+               for fb, fh in seq]
+        # 原版 Repeater 复用 PeaShooter 图，但整株压成更深的绿色（单头，不是双头）。
+        tinted = []
+        for im in ims:
+            px = im.load()
+            for yy in range(im.height):
+                for xx in range(im.width):
+                    r, g, b, a = px[xx, yy]
+                    if a:
+                        px[xx, yy] = (int(r * 0.55), int(g * 0.72), int(b * 0.50), a)
+            tinted.append(im)
+        frames[cname] = tinted
+    box = bbox_union([im for ims in frames.values() for im in ims])
+    w, h = box[2] - box[0], box[3] - box[1]
+    ax, ay = 1000 - box[0], 1000 - box[1]
+    max_h = 260
+    k = min(1.0, max_h / float(h))
+    if k < 1.0:
+        w, h = max(1, int(round(w * k))), max(1, int(round(h * k)))
+        ax, ay = ax * k, ay * k
+    clips = {}
+    for cname, ims in frames.items():
+        ims = [im.crop(box) for im in ims]
+        if k < 1.0:
+            ims = [im.resize((w, h), Image.BICUBIC) for im in ims]
+        cols = min(len(ims), 5)
+        sheet, cols, rows = grid_image(ims, w, h, cols)
+        rel = 'reanim/%s/%s.webp' % (role, cname)
+        out = os.path.join(OUT, role, cname + '.webp')
+        os.makedirs(os.path.dirname(out), exist_ok=True)
+        save_webp(sheet, out)
+        clips[cname] = dict(file=rel, frames=len(ims), cols=cols, rows=rows,
+                            fps=float(FPS), bytes=os.path.getsize(out))
+    print('%-14s %-22s %dx%d clips=%s' % (role, 'PeaShooter(composite)', w, h, ','.join(clips)))
+    return dict(w=float(w), h=float(h), ax=float(ax), ay=float(ay),
+                fps=FPS, scale=1.0, clips=clips)
+
 
 def build_golden(role, old):
     man = json.load(open(os.path.join(ROOT, 'assets', 'plants', 'reanim', 'manifest.json')))
@@ -397,6 +527,10 @@ def main():
         chars[role] = dict(w=float(w), h=float(h), ax=w / 2.0, ay=float(h),
                            fps=FPS, scale=1.0, clips=clips)
         print('%-14s golden                  %dx%d clips=%s' % (role, w, h, ','.join(clips)))
+
+    rep = build_repeater('repeater')
+    if rep:
+        chars['repeater'] = rep
 
     for role, src in PLANTS.items():
         if role in chars:
@@ -455,7 +589,7 @@ def main():
 
     # 这几个角色原版素材是分体/水下分镜，单帧合成会缺件；
     # 交给已验收的旧绘制/静态立绘回退，避免上线出现碎片。
-    for _drop in ('repeater', 'threepeater', 'tanglekelp', 'lilypad'):
+    for _drop in ('tanglekelp', 'lilypad'):
         chars.pop(_drop, None)
     man = dict(fps=FPS, chars=chars)
     with open(os.path.join(OUT, 'manifest.json'), 'w', encoding='utf-8') as fh:

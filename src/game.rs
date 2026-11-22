@@ -4,6 +4,7 @@ use crate::sfx::Sfx;
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum State {
     Menu,
+    Map,
     Choosing,
     Playing,
     Paused,
@@ -167,6 +168,7 @@ pub struct Game {
     pub flash_screen: f32,
     pub debug: bool,
     pub level: usize,
+    pub map_page: usize,
     pub cfg: LevelCfg,
 }
 
@@ -234,6 +236,7 @@ impl Game {
             flash_screen: 0.0,
             debug: false,
             level: 0,
+            map_page: 0,
             cfg: level_cfg(0),
         }
     }
@@ -1189,7 +1192,8 @@ impl Game {
         } else if self.is_flag_wave(w + 1) {
             self.elapsed + 45.0
         } else {
-            self.elapsed + 25.0 + self.rng.f(0.0, 6.0)
+            let idx = (w as usize).min(self.cfg.gaps.len().saturating_sub(1));
+            self.elapsed + self.cfg.gaps[idx] + self.rng.f(0.0, 3.0)
         };
     }
 
@@ -1274,16 +1278,35 @@ impl Game {
         self.mouse = (x, y);
         match self.state {
             State::Menu => {
-                for i in 0..LEVEL_COUNT {
-                    if rect_contains(level_rect(i), x, y) {
-                        self.enter_choose(i);
+                if button != 2 && rect_contains(BTN_ADVENTURE, x, y) {
+                    self.state = State::Map;
+                    self.sfx.click();
+                    return;
+                }
+            }
+            State::Map => {
+                if button == 2 || rect_contains(MAP_BACK, x, y) {
+                    self.state = State::Menu;
+                    self.sfx.click();
+                    return;
+                }
+                for w in 0..WORLD_COUNT {
+                    if rect_contains(world_tab_rect(w), x, y) {
+                        self.map_page = w;
+                        self.sfx.click();
+                        return;
+                    }
+                }
+                for j in 0..LEVELS_PER_WORLD {
+                    if rect_contains(level_rect(j), x, y) {
+                        self.enter_choose(self.map_page * LEVELS_PER_WORLD + j);
                         return;
                     }
                 }
             }
             State::Choosing => {
                 if button == 2 || rect_contains((12.0, 12.0, 92.0, 40.0), x, y) {
-                    self.state = State::Menu;
+                    self.state = State::Map;
                     self.sfx.click();
                     return;
                 }
@@ -1523,13 +1546,16 @@ impl Game {
                     self.state = State::Playing;
                     self.sfx.music(true);
                 } else if self.state == State::Menu {
-                    self.start();
+                    self.state = State::Map;
+                    self.sfx.click();
                 }
             }
             "Escape" => {
                 self.selected = None;
                 self.shovel = false;
                 if self.state == State::Choosing {
+                    self.state = State::Map;
+                } else if self.state == State::Map {
                     self.state = State::Menu;
                 } else if self.state == State::Playing {
                     self.state = State::Paused;

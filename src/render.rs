@@ -194,6 +194,10 @@ pub fn render(g: &Game, ctx: &CanvasRenderingContext2d) {
         draw_menu(&p, g);
         return;
     }
+    if g.state == State::Map {
+        draw_map(&p, g);
+        return;
+    }
     if g.state == State::Choosing {
         draw_chooser(&p, g);
         return;
@@ -1630,7 +1634,25 @@ fn draw_chooser(p: &P, g: &Game) {
 }
 
 fn draw_menu(p: &P, g: &Game) {
-    // 整屏草坪
+    draw_menu_backdrop(p, g);
+
+    p.text_out("植物大战僵尸", W * 0.5, 176.0, 82.0, "#ffe14d", "#3c2404", "center", true);
+    p.text_out("R U S T   重 制 版", W * 0.5, 232.0, 21.0, "#c6f08a", "#23400f", "center", true);
+    p.text("守住草坪，别让僵尸走进房子", W * 0.5, 278.0, 17.0, rgba(240, 250, 222, 0.9), "center", false);
+
+    let r = BTN_ADVENTURE;
+    let hover = rect_contains(r, g.mouse.0, g.mouse.1);
+    let y = r.1 + if hover { -3.0 } else { 0.0 };
+    p.rr(r.0, y + 5.0, r.2, r.3, 16.0, rgba(0, 0, 0, 0.36));
+    p.rr(r.0, y, r.2, r.3, 16.0, if hover { "#b87535" } else { "#96582a" });
+    p.rr_s(r.0, y, r.2, r.3, 16.0, 3.0, if hover { "#ffe6a3" } else { "#e8c477" });
+    p.text_out("冒 险 模 式", r.0 + r.2 * 0.5, y + 36.0, 34.0, "#fff6d2", "#5a2f0d", "center", true);
+    p.text("ADVENTURE  ·  1-1 至 5-10", r.0 + r.2 * 0.5, y + 62.0, 12.0, rgba(255, 240, 200, 0.86), "center", false);
+    p.text("点击冒险模式 → 五章五十关地图 → 选关卡 → 选种子开战", W * 0.5, 524.0, 14.0, rgba(236, 248, 218, 0.9), "center", false);
+    p.text("Rust + WebAssembly ｜ 正版植物立绘与原声素材 ｜ Canvas 2D", W * 0.5, 706.0, 13.0, rgba(230, 245, 210, 0.75), "center", false);
+}
+
+fn draw_menu_backdrop(p: &P, g: &Game) {
     p.rect(0.0, 0.0, W, H, "#4f8c2c");
     for col in 0..COLS {
         let c = if col % 2 == 0 { "#85c951" } else { "#77bc44" };
@@ -1642,9 +1664,7 @@ fn draw_menu(p: &P, g: &Game) {
         p.rect(x, 0.0, 14.0, H, rgba(20, 55, 12, 0.10));
     }
     draw_house(p, g);
-    p.rect(0.0, 0.0, W, H, rgba(10, 26, 8, 0.26));
-
-    // 装饰植物（底部草坪）
+    p.rect(0.0, 0.0, W, H, rgba(10, 26, 8, 0.24));
     for (kind, cx, t) in [
         (PlantKind::Sunflower, 130.0f32, 1.0f32),
         (PlantKind::Peashooter, 270.0, 2.0),
@@ -1658,77 +1678,81 @@ fn draw_menu(p: &P, g: &Game) {
         draw_plant_anim(p, kind, 0.0, 0.0, g.time + t, 1.0, 1.0, 0.0);
         p.restore();
     }
-
-    // 阳光
     for (x, y, t) in [(1005.0f32, 190.0f32, 0.0f32), (820.0f32, 640.0f32, 2.0f32)] {
-        let s = Sun {
-            x,
-            y,
-            ty: y,
-            value: 25,
-            t,
-            life: 9.0,
-            state: SunState::Idle,
-        };
+        let s = Sun { x, y, ty: y, value: 25, t, life: 9.0, state: SunState::Idle };
         draw_sun(p, &s, g.time);
     }
+}
 
-    // 标题
-    p.text_out("植物大战僵尸", W * 0.5, 168.0, 80.0, "#ffe14d", "#3c2404", "center", true);
-    p.text_out(
-        "R U S T   重 制 版",
-        W * 0.5,
-        224.0,
-        21.0,
-        "#c6f08a",
-        "#23400f",
-        "center",
-        true,
-    );
-
-    // 说明面板
-    p.rr(330.0, 262.0, 620.0, 186.0, 18.0, rgba(14, 32, 10, 0.78));
-    p.rr_s(330.0, 262.0, 620.0, 186.0, 18.0, 2.0, rgba(233, 196, 106, 0.45));
-    let lines = [
-        ("每关先选种子，再点击卡片和草坪种植", "#f3f8e6", 18.0),
-        ("新增卷心菜投手、星星果、大蒜、地刺", "#f3f8e6", 18.0),
-        ("三个关卡：6 / 7 / 8 个卡槽，波次逐关变强", "#f3f8e6", 18.0),
-        ("空格暂停 · R 重开 · 右键取消选择", "#a9c786", 13.0),
-    ];
-    for (i, (line, col, size)) in lines.iter().enumerate() {
-        p.text(line, W * 0.5, 298.0 + i as f32 * 36.0, *size, col, "center", false);
+fn draw_map(p: &P, g: &Game) {
+    let page = g.map_page.min(WORLD_COUNT - 1);
+    p.rect(0.0, 0.0, W, H, "#3f7223");
+    for col in 0..COLS {
+        let c = if col % 2 == 0 { "#76b342" } else { "#69a83a" };
+        p.rect(GRID_X + col as f32 * CELL_W, 0.0, CELL_W, H, c);
     }
+    p.rect(GRID_X + COLS as f32 * CELL_W, 0.0, W, H, "#396b20");
+    draw_house(p, g);
+    let (tr, tg, tb, ta) = level_cfg(page * LEVELS_PER_WORLD).tint;
+    if ta > 0.0 {
+        p.rect(0.0, 0.0, W, H, rgba(tr, tg, tb, ta));
+    }
+    p.rect(0.0, 0.0, W, H, rgba(8, 24, 6, 0.22));
 
-    // 关卡选择
-    for i in 0..LEVEL_COUNT {
-        let cfg = level_cfg(i);
-        let r = level_rect(i);
+    p.rr(360.0, 40.0, 560.0, 86.0, 14.0, rgba(47, 26, 10, 0.84));
+    p.rr_s(360.0, 40.0, 560.0, 86.0, 14.0, 3.0, "#d8a554");
+    p.text_out("冒 险 模 式", W * 0.5, 76.0, 34.0, "#ffe88a", "#4b2406", "center", true);
+    p.text(WORLD_SUBS[page], W * 0.5, 108.0, 15.0, "#f4dcae", "center", false);
+
+    let hr = rect_contains(MAP_BACK, g.mouse.0, g.mouse.1);
+    p.rr(MAP_BACK.0, MAP_BACK.1, MAP_BACK.2, MAP_BACK.3, 10.0, if hr { rgba(110, 74, 40, 1.0) } else { rgba(45, 28, 12, 0.82) });
+    p.rr_s(MAP_BACK.0, MAP_BACK.1, MAP_BACK.2, MAP_BACK.3, 10.0, 2.0, "#dcb878");
+    p.text("‹ 返回", MAP_BACK.0 + 52.0, MAP_BACK.1 + 26.0, 16.0, "#fff0c9", "center", false);
+
+    // 五个章节标签
+    for w in 0..WORLD_COUNT {
+        let r = world_tab_rect(w);
+        let act = w == page;
         let hover = rect_contains(r, g.mouse.0, g.mouse.1);
-        let by = r.1 + if hover { -2.0 } else { 0.0 };
-        p.rr(r.0, by + 3.0, r.2, r.3, 12.0, rgba(0, 0, 0, 0.3));
-        p.rr(r.0, by, r.2, r.3, 12.0, if hover { "#7ec24a" } else { "#5d9c35" });
-        p.rr_s(r.0, by, r.2, r.3, 12.0, 2.5, "#cdf39b");
-        p.text_out(cfg.name, r.0 + r.2 * 0.5, by + 24.0, 20.0, "#ffffff", "#2c4c18", "center", true);
-        p.text(
-            cfg.subtitle,
-            r.0 + r.2 * 0.5,
-            by + 44.0,
-            11.0,
-            rgba(235, 250, 215, 0.9),
-            "center",
-            false,
-        );
+        p.rr(r.0, r.1, r.2, r.3, 9.0, if act { rgba(200, 135, 63, 1.0) } else if hover { rgba(109, 73, 38, 1.0) } else { rgba(38, 26, 14, 0.78) });
+        p.rr_s(r.0, r.1, r.2, r.3, 9.0, 2.0, if act { "#ffdf94" } else { "#b28b56" });
+        p.text(&format!("{}-{}  {}", w + 1, 1, ["白天", "夜晚", "泳池", "浓雾", "屋顶"][w]), r.0 + r.2 * 0.5, r.1 + 24.0, 14.0, if act { "#3f230b" } else { "#e7cfa3" }, "center", act);
     }
 
-    p.text(
-        "Rust + WebAssembly ｜ 正版植物立绘与原声素材 ｜ Canvas 2D",
-        W * 0.5,
-        706.0,
-        13.0,
-        rgba(230, 245, 210, 0.75),
-        "center",
-        false,
-    );
+    // 两个折返行组成的关卡路径
+    let mut prev: Option<(f32, f32)> = None;
+    for j in 0..LEVELS_PER_WORLD {
+        let r = level_rect(j);
+        let cx = r.0 + r.2 * 0.5;
+        let cy = r.1 + r.3 * 0.5;
+        if let Some((px, py)) = prev {
+            p.line(&[(px, py), (cx, cy)], 7.0, rgba(94, 68, 36, 0.85));
+            p.line(&[(px, py), (cx, cy)], 3.0, rgba(205, 174, 120, 0.9));
+        }
+        prev = Some((cx, cy));
+    }
+
+    for j in 0..LEVELS_PER_WORLD {
+        let r = level_rect(j);
+        let cx = r.0 + r.2 * 0.5;
+        let cy = r.1 + r.3 * 0.5;
+        let cfg = level_cfg(page * LEVELS_PER_WORLD + j);
+        let hover = rect_contains(r, g.mouse.0, g.mouse.1);
+        let flag = ["#d84b37", "#df8a2e", "#4c9bd8", "#8a77c9", "#c94f9a"][page];
+        p.ell(cx, cy + 30.0, 48.0, 10.0, rgba(20, 34, 10, 0.28));
+        p.circle(cx, cy + 18.0, 26.0, "#8c6a3c");
+        p.circle(cx, cy + 15.0, 23.0, "#d5b577");
+        p.rr(r.0, r.1 + if hover { -3.0 } else { 0.0 }, r.2, r.3, 8.0, if hover { "#9b622f" } else { "#7f4e25" });
+        p.rr_s(r.0 + 3.0, r.1 + 3.0 + if hover { -3.0 } else { 0.0 }, r.2 - 6.0, r.3 - 6.0, 6.0, 2.0, if hover { "#ffe6ad" } else { "#efd49a" });
+        p.text_out(&format!("{}-{}", page + 1, j + 1), cx, cy - 2.0 + if hover { -3.0 } else { 0.0 }, 20.0, "#5b3412", "#f7e5bd", "center", true);
+        p.text(&format!("{} 波", cfg.waves), cx, cy + 19.0 + if hover { -3.0 } else { 0.0 }, 9.0, "#7c5228", "center", false);
+        // 节点小旗
+        p.line(&[(r.0 + r.2 - 9.0, r.1 - 22.0), (r.0 + r.2 - 9.0, r.1 + 8.0)], 2.0, "#68451f");
+        p.poly(&[(r.0 + r.2 - 8.0, r.1 - 21.0), (r.0 + r.2 + 14.0, r.1 - 15.0), (r.0 + r.2 - 8.0, r.1 - 9.0)], flag);
+    }
+
+    p.text(&format!("第 {} 章 · {}：点击关卡进入种子选择", page + 1, WORLD_NAMES[page]), W * 0.5, 660.0, 15.0, rgba(240, 249, 224, 0.92), "center", false);
+    p.text("顶部标签切换章节 · 右键 / Esc 返回主菜单 · 共 50 关", W * 0.5, 686.0, 12.0, rgba(206, 229, 181, 0.8), "center", false);
 }
 
 fn draw_pause(p: &P, _g: &Game) {

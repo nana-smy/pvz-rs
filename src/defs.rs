@@ -266,7 +266,108 @@ impl ZombieKind {
     }
 }
 
-pub const LEVEL_COUNT: usize = 3;
+pub const LEVEL_COUNT: usize = 50;
+pub const WORLD_COUNT: usize = 5;
+pub const LEVELS_PER_WORLD: usize = 10;
+
+pub const WORLD_NAMES: [&str; WORLD_COUNT] = [
+    "白天 · 前院",
+    "夜晚 · 前院",
+    "泳池 · 白天",
+    "浓雾 · 夜晚",
+    "屋顶 · 黄昏",
+];
+pub const WORLD_SUBS: [&str; WORLD_COUNT] = [
+    "第 1 章 · 1-1 至 1-10",
+    "第 2 章 · 2-1 至 2-10",
+    "第 3 章 · 3-1 至 3-10",
+    "第 4 章 · 4-1 至 4-10",
+    "第 5 章 · 5-1 至 5-10",
+];
+pub const WORLD_HINTS: [&str; WORLD_COUNT] = [
+    "白天阳光充足，先铺向日葵再补输出",
+    "夜晚阳光稀少，优先带足经济植物",
+    "泳池关波次更密，注意两翼与中路",
+    "浓雾中视野受限，带上范围清场植物",
+    "屋顶决战，橄榄球与扶梯僵尸齐上",
+];
+static WORLD_TINT: [(u8, u8, u8, f32); WORLD_COUNT] = [
+    (0, 0, 0, 0.0),
+    (10, 14, 45, 0.32),
+    (0, 45, 55, 0.10),
+    (55, 65, 65, 0.22),
+    (55, 25, 10, 0.18),
+];
+static WORLD_SUN: [i32; WORLD_COUNT] = [75, 100, 100, 100, 100];
+static WORLD_SLOTS: [usize; WORLD_COUNT] = [6, 7, 8, 8, 9];
+
+/// 来自 PvZ-Portable 的 `gZombieWaves`：1-1 到 5-10 的原始波次数。
+static WAVE_COUNTS: [u32; LEVEL_COUNT] = [
+    4,6,8,10,8,10,20,10,20,20,
+    10,20,10,20,10,10,20,10,20,20,
+    10,20,20,30,20,20,30,20,30,30,
+    10,20,10,20,20,10,20,10,20,20,
+    10,20,20,30,20,20,30,20,30,30,
+];
+static GAPS_50: [f32; 30] = [
+    22.0,21.0,20.0,19.0,18.0,18.0,17.0,17.0,16.0,16.0,
+    15.0,15.0,15.0,14.0,14.0,14.0,13.0,13.0,13.0,12.0,
+    12.0,12.0,11.0,11.0,11.0,10.0,10.0,10.0,9.0,9.0,
+];
+
+static POOL_00: [ZombieKind; 1] = [ZombieKind::Basic];
+static POOL_01: [ZombieKind; 1] = [ZombieKind::Basic];
+static POOL_02: [ZombieKind; 2] = [ZombieKind::Basic, ZombieKind::Cone];
+static POOL_03: [ZombieKind; 2] = [ZombieKind::Basic, ZombieKind::Cone];
+static POOL_04: [ZombieKind; 2] = [ZombieKind::Basic, ZombieKind::Cone];
+static POOL_05: [ZombieKind; 3] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::PoleVault];
+static POOL_06: [ZombieKind; 3] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::PoleVault];
+static POOL_07: [ZombieKind; 3] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::Bucket];
+static POOL_08: [ZombieKind; 4] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::PoleVault, ZombieKind::Bucket];
+static POOL_09: [ZombieKind; 4] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::PoleVault, ZombieKind::Bucket];
+static POOL_10: [ZombieKind; 2] = [ZombieKind::Basic, ZombieKind::Cone];
+static POOL_11: [ZombieKind; 3] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::Bucket];
+static POOL_12: [ZombieKind; 3] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::ScreenDoor];
+static POOL_13: [ZombieKind; 4] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::PoleVault, ZombieKind::ScreenDoor];
+static POOL_14: [ZombieKind; 4] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::PoleVault, ZombieKind::Bucket];
+static POOL_15: [ZombieKind; 3] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::Football];
+static POOL_16: [ZombieKind; 4] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::ScreenDoor, ZombieKind::Football];
+static POOL_17: [ZombieKind; 3] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::Football];
+static POOL_18: [ZombieKind; 4] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::ScreenDoor, ZombieKind::Football];
+static POOL_19: [ZombieKind; 4] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::ScreenDoor, ZombieKind::Football];
+static POOL_20: [ZombieKind; 2] = [ZombieKind::Basic, ZombieKind::Cone];
+static POOL_21: [ZombieKind; 4] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::Bucket, ZombieKind::Football];
+static POOL_22: [ZombieKind; 2] = [ZombieKind::Basic, ZombieKind::Cone];
+static POOL_23: [ZombieKind; 4] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::PoleVault, ZombieKind::Bucket];
+static POOL_24: [ZombieKind; 3] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::Football];
+static POOL_25: [ZombieKind; 3] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::Football];
+static POOL_26: [ZombieKind; 4] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::Bucket, ZombieKind::Football];
+static POOL_27: [ZombieKind; 3] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::PoleVault];
+static POOL_28: [ZombieKind; 5] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::PoleVault, ZombieKind::Bucket, ZombieKind::Football];
+static POOL_29: [ZombieKind; 5] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::Bucket, ZombieKind::Football, ZombieKind::PoleVault];
+static POOL_30: [ZombieKind; 3] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::Football];
+static POOL_31: [ZombieKind; 3] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::Football];
+static POOL_32: [ZombieKind; 3] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::Ladder];
+static POOL_33: [ZombieKind; 4] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::PoleVault, ZombieKind::Ladder];
+static POOL_34: [ZombieKind; 2] = [ZombieKind::Basic, ZombieKind::Cone];
+static POOL_35: [ZombieKind; 3] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::Ladder];
+static POOL_36: [ZombieKind; 5] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::Bucket, ZombieKind::Football, ZombieKind::Ladder];
+static POOL_37: [ZombieKind; 3] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::Ladder];
+static POOL_38: [ZombieKind; 4] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::Bucket, ZombieKind::Ladder];
+static POOL_39: [ZombieKind; 5] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::Bucket, ZombieKind::Football, ZombieKind::Ladder];
+static POOL_40: [ZombieKind; 3] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::Ladder];
+static POOL_41: [ZombieKind; 5] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::PoleVault, ZombieKind::Bucket, ZombieKind::Ladder];
+static POOL_42: [ZombieKind; 3] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::Ladder];
+static POOL_43: [ZombieKind; 4] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::Football, ZombieKind::Ladder];
+static POOL_44: [ZombieKind; 4] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::Bucket, ZombieKind::Ladder];
+static POOL_45: [ZombieKind; 3] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::Football];
+static POOL_46: [ZombieKind; 4] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::Ladder, ZombieKind::Football];
+static POOL_47: [ZombieKind; 3] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::Football];
+static POOL_48: [ZombieKind; 5] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::Bucket, ZombieKind::Football, ZombieKind::Ladder];
+static POOL_49: [ZombieKind; 5] = [ZombieKind::Basic, ZombieKind::Cone, ZombieKind::Bucket, ZombieKind::Football, ZombieKind::Ladder];
+static LEVEL_POOLS: [&'static [ZombieKind]; 50] = [
+    &POOL_00, &POOL_01, &POOL_02, &POOL_03, &POOL_04, &POOL_05, &POOL_06, &POOL_07, &POOL_08, &POOL_09, &POOL_10, &POOL_11, &POOL_12, &POOL_13, &POOL_14, &POOL_15, &POOL_16, &POOL_17, &POOL_18, &POOL_19, &POOL_20, &POOL_21, &POOL_22, &POOL_23, &POOL_24, &POOL_25, &POOL_26, &POOL_27, &POOL_28, &POOL_29, &POOL_30, &POOL_31, &POOL_32, &POOL_33, &POOL_34, &POOL_35, &POOL_36, &POOL_37, &POOL_38, &POOL_39, &POOL_40, &POOL_41, &POOL_42, &POOL_43, &POOL_44, &POOL_45, &POOL_46, &POOL_47, &POOL_48, &POOL_49,
+];
 
 #[derive(Clone, Copy)]
 pub struct LevelCfg {
@@ -284,116 +385,63 @@ pub struct LevelCfg {
     pub seed_hint: &'static str,
 }
 
-static GAPS_A: [f32; 7] = [30.0, 28.0, 26.0, 24.0, 22.0, 20.0, 18.0];
-static GAPS_B: [f32; 9] = [28.0, 26.0, 24.0, 23.0, 22.0, 21.0, 20.0, 19.0, 18.0];
-static GAPS_C: [f32; 11] = [26.0, 25.0, 24.0, 23.0, 22.0, 21.0, 20.0, 19.0, 18.0, 17.0, 16.0];
-static POOL_A: [ZombieKind; 1] = [ZombieKind::Basic];
-static POOL_B: [ZombieKind; 4] = [
-    ZombieKind::Basic,
-    ZombieKind::Cone,
-    ZombieKind::Bucket,
-    ZombieKind::ScreenDoor,
-];
-static POOL_C: [ZombieKind; 7] = [
-    ZombieKind::Basic,
-    ZombieKind::Cone,
-    ZombieKind::Bucket,
-    ZombieKind::PoleVault,
-    ZombieKind::Football,
-    ZombieKind::ScreenDoor,
-    ZombieKind::Ladder,
-];
-
-static PLANTS_A: [PlantKind; 8] = [
-    PlantKind::Sunflower,
+/// 植物按关卡逐步解锁，顺序沿用原版冒险模式的获得节奏，映射到本作已有的 14 种植物。
+static PLANT_UNLOCK_ORDER: [PlantKind; 14] = [
     PlantKind::Peashooter,
-    PlantKind::WallNut,
+    PlantKind::Sunflower,
     PlantKind::Cherry,
+    PlantKind::WallNut,
     PlantKind::PotatoMine,
     PlantKind::SnowPea,
-    PlantKind::Cabbage,
-    PlantKind::Garlic,
-];
-static PLANTS_B: [PlantKind; 11] = [
-    PlantKind::Sunflower,
-    PlantKind::Peashooter,
-    PlantKind::WallNut,
-    PlantKind::Cherry,
-    PlantKind::PotatoMine,
-    PlantKind::SnowPea,
-    PlantKind::Cabbage,
-    PlantKind::Garlic,
     PlantKind::Repeater,
-    PlantKind::Threepeater,
-    PlantKind::Spikeweed,
-];
-static PLANTS_C: [PlantKind; 14] = [
-    PlantKind::Sunflower,
-    PlantKind::Peashooter,
-    PlantKind::WallNut,
-    PlantKind::Cherry,
-    PlantKind::PotatoMine,
-    PlantKind::SnowPea,
     PlantKind::Cabbage,
     PlantKind::Garlic,
-    PlantKind::Repeater,
-    PlantKind::Threepeater,
     PlantKind::Spikeweed,
+    PlantKind::Threepeater,
     PlantKind::Jalapeno,
     PlantKind::Starfruit,
     PlantKind::Squash,
 ];
+static PLANT_UNLOCK_AT: [usize; 14] = [0, 1, 2, 3, 4, 5, 11, 14, 17, 21, 26, 31, 36, 41];
+
+pub fn plants_for_level(level: usize) -> &'static [PlantKind] {
+    let n = PLANT_UNLOCK_AT.iter().filter(|x| **x <= level).count().max(1);
+    &PLANT_UNLOCK_ORDER[..n]
+}
 
 pub fn level_cfg(i: usize) -> LevelCfg {
-    match i {
-        1 => LevelCfg {
-            name: "黄昏 · 前院",
-            subtitle: "更多铁桶与铁门僵尸",
-            sun: 90,
-            waves: 6,
-            first_wave: 18.0,
-            flag_wave: 6,
-            gaps: &GAPS_B,
-            tint: (0, 0, 0, 0.0),
-            pool: &POOL_B,
-            plants: &PLANTS_B,
-            slots: 7,
-            seed_hint: "黄昏波次更密，优先带群攻和地刺",
-        },
-        2 => LevelCfg {
-            name: "夜晚 · 前院",
-            subtitle: "撑杆跳、橄榄球僵尸来袭",
-            sun: 100,
-            waves: 8,
-            first_wave: 18.0,
-            flag_wave: 8,
-            gaps: &GAPS_C,
-            tint: (0, 0, 0, 0.0),
-            pool: &POOL_C,
-            plants: &PLANTS_C,
-            slots: 8,
-            seed_hint: "夜晚没有天降阳光，必须带足向日葵",
-        },
-        _ => LevelCfg {
-            name: "白天 · 前院",
-            subtitle: "适应草坪与阳光节奏",
-            sun: 75,
-            waves: 4,
-            first_wave: 18.0,
-            flag_wave: 0,
-            gaps: &GAPS_A,
-            tint: (0, 0, 0, 0.0),
-            pool: &POOL_A,
-            plants: &PLANTS_A,
-            slots: 6,
-            seed_hint: "先选向日葵和豌豆，再补防御与清场",
-        },
+    let level = i.min(LEVEL_COUNT - 1);
+    let world = (level / LEVELS_PER_WORLD).min(WORLD_COUNT - 1);
+    let waves = WAVE_COUNTS[level];
+    LevelCfg {
+        name: WORLD_NAMES[world],
+        subtitle: WORLD_SUBS[world],
+        sun: if level < 2 { 150 } else { WORLD_SUN[world] },
+        waves,
+        first_wave: 18.0,
+        flag_wave: if waves >= 10 { waves / 2 } else { 0 },
+        gaps: &GAPS_50,
+        tint: WORLD_TINT[world],
+        pool: LEVEL_POOLS[level],
+        plants: plants_for_level(level),
+        slots: WORLD_SLOTS[world],
+        seed_hint: WORLD_HINTS[world],
     }
 }
 
 pub fn level_rect(i: usize) -> (f32, f32, f32, f32) {
-    (172.0 + i as f32 * 262.0, 466.0, 238.0, 62.0)
+    let row = i / 5;
+    let raw = i % 5;
+    let col = if row == 0 { raw } else { 4 - raw };
+    (300.0 + col as f32 * 175.0, 408.0 + row as f32 * 126.0, 132.0, 58.0)
 }
+
+pub fn world_tab_rect(i: usize) -> (f32, f32, f32, f32) {
+    (246.0 + i as f32 * 158.0, 160.0, 146.0, 38.0)
+}
+
+pub const BTN_ADVENTURE: (f32, f32, f32, f32) = (468.0, 414.0, 344.0, 82.0);
+pub const MAP_BACK: (f32, f32, f32, f32) = (16.0, 14.0, 104.0, 38.0);
 
 pub const CHOOSE_COLS: usize = 7;
 pub const CHOOSE_X: f32 = 196.0;

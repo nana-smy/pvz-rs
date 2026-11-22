@@ -346,7 +346,13 @@ pub fn zombie(kind: u8, frame: u8) -> Option<HtmlImageElement> {
 }
 
 pub fn bg(level: usize) -> Option<HtmlImageElement> {
-    let idx = level.min(2);
+    let idx = match (level / 10).min(4) {
+        0 => 0, // 白天
+        1 => 2, // 夜晚
+        2 => 0, // 泳池
+        3 => 2, // 浓雾
+        _ => 1, // 屋顶黄昏
+    };
     let cached = BGS.with(|m| m.borrow().get(idx).cloned().flatten());
     if cached.is_some() {
         return cached;

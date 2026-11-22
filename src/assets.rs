@@ -288,11 +288,23 @@ pub fn plant_sheet(art: Art, shoot: bool) -> Option<HtmlImageElement> {
     if let Some(img) = &got {
         SHEETS.with(|m| {
             let mut v = m.borrow_mut();
-            if v.len() < 28 {
-                v.resize(28, None);
+            if v.len() < 29 {
+                v.resize(29, None);
             }
             v[idx] = Some(img.clone());
         });
+    }
+    got
+}
+
+pub fn plant_rise() -> Option<HtmlImageElement> {
+    let idx = 28;
+    let cached = SHEETS.with(|m| m.borrow().get(idx).cloned().flatten());
+    if cached.is_some() { return cached; }
+    let clip = crate::plant_anim::RISE_POTATO;
+    let got = live(clip.key);
+    if let Some(img) = &got {
+        SHEETS.with(|m| { let mut v = m.borrow_mut(); if v.len() < 29 { v.resize(29, None); } v[idx] = Some(img.clone()); });
     }
     got
 }

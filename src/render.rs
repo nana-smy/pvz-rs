@@ -500,7 +500,48 @@ fn draw_plant(p: &P, pl: &Plant, time: f32) {
     p.c.translate(cx as f64, base as f64);
     p.c.scale(s as f64, s as f64);
     p.c.translate(-cx as f64, -base as f64);
-    draw_plant_anim(p, pl.kind, cx, base, time, ratio, pl.fuse, pl.anim);
+    if pl.kind == PlantKind::PotatoMine {
+        draw_potato_mine(p, pl, time);
+    } else {
+        draw_plant_anim(p, pl.kind, cx, base, time, ratio, pl.fuse, pl.anim);
+    }
+    p.restore();
+}
+
+fn draw_potato_mine(p: &P, pl: &Plant, time: f32) {
+    let cx = GRID_X + pl.col as f32 * CELL_W + CELL_W * 0.5;
+    let base = row_ground(pl.row);
+    let idle = crate::plant_anim::IDLE[Art::PotatoMine as usize];
+    let rise = crate::plant_anim::RISE_POTATO;
+    let (img, clip, frame) = if pl.timer > 0.0 {
+        // 未武装：停在原版 anim_rise 第一帧，只露出土堆和熄灭的引信。
+        (assets::plant_rise(), rise, 0u32)
+    } else if pl.timer > -1.55 {
+        let k = (-pl.timer / 1.55).clamp(0.0, 1.0);
+        (assets::plant_rise(), rise, ((k * (rise.frames - 1) as f32) as u32).min(rise.frames - 1))
+    } else {
+        let f = ((time * 12.0) as u32) % idle.frames;
+        (assets::plant_sheet(Art::PotatoMine, false), idle, f)
+    };
+    let Some(img) = img else { return };
+    let scale = art_height(Art::PotatoMine) / idle.h;
+    let dw = clip.w * scale;
+    let dh = clip.h * scale;
+    p.save();
+    p.c.translate(cx as f64, (base + 8.0 + 4.0 * scale) as f64);
+    let sx = (frame * clip.w as u32) as f64;
+    draw_img_rect(
+        p.c,
+        &img,
+        sx,
+        0.0,
+        clip.w as f64,
+        clip.h as f64,
+        (-dw * 0.5) as f64,
+        -dh as f64,
+        dw as f64,
+        dh as f64,
+    );
     p.restore();
 }
 
@@ -927,7 +968,7 @@ fn draw_zombie(p: &P, z: &Zombie, time: f32) {
         let scale = 0.40;
         let w = img.width() as f32 * scale;
         let h = img.height() as f32 * scale;
-        let foot_pad = h * 0.033;
+        let foot_pad = 0.0;
         let _ = p.c.draw_image_with_html_image_element_and_dw_and_dh(
             &img,
             (-w * 0.5) as f64,

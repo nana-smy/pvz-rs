@@ -71,6 +71,12 @@
       "frames": 11,
       "w": 104,
       "h": 84
+    },
+    "rise": {
+      "key": "pf_potatomine_rise",
+      "frames": 19,
+      "w": 105,
+      "h": 87
     }
   },
   "jalapeno": {

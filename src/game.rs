@@ -716,22 +716,56 @@ impl Game {
             self.sfx.explode();
         }
         for (x, row) in mine_hits {
+            let gy = row_ground(row) - 8.0;
             for z in self.zombies.iter_mut() {
-                if z.row == row && !z.dying && (z.x - x).abs() < 84.0 {
-                    hurt_zombie(z, 1800.0);
+                if z.row == row && !z.dying && (z.x - x).abs() < 96.0 {
+                    hurt_zombie(z, 9000.0);
                 }
             }
-            for k in 0..14 {
-                let a = k as f32 / 14.0 * std::f32::consts::TAU;
+            // 土豆雷不是“悄悄消失”：中心火球 + 向外飞散的土块/火星，并伴随屏幕震动。
+            self.shake = self.shake.max(13.0);
+            self.flash_screen = self.flash_screen.max(0.16);
+            for k in 0..18 {
+                let a = k as f32 / 18.0 * std::f32::consts::TAU;
                 self.particles.push(part(
-                    x,
-                    row_ground(row) - 10.0,
-                    a.cos() * 90.0,
-                    a.sin() * 90.0,
-                    0.5,
-                    7.0,
-                    (255, 200, 80),
-                    60.0,
+                    x + a.cos() * 8.0,
+                    gy + a.sin() * 5.0,
+                    a.cos() * 150.0,
+                    a.sin() * 95.0 - 35.0,
+                    0.48,
+                    if k % 3 == 0 { 11.0 } else { 7.0 },
+                    if k % 2 == 0 { (255, 235, 140) } else { (255, 145, 35) },
+                    70.0,
+                    PKind::Dot,
+                ));
+            }
+            for k in 0..10 {
+                let a = k as f32 / 10.0 * std::f32::consts::TAU + 0.3;
+                self.particles.push(part(
+                    x + a.cos() * 10.0,
+                    gy,
+                    a.cos() * 115.0,
+                    -60.0 + a.sin() * 55.0,
+                    0.62,
+                    8.0,
+                    (132, 82, 42),
+                    120.0,
+                    PKind::Leaf,
+                ));
+            }
+            self.particles.push(part(x, gy, 0.0, 0.0, 0.85, 26.0, (255, 190, 60), 0.0, PKind::Ring));
+            // 残留烟尘，保证爆炸不是一闪而过。
+            for k in 0..9 {
+                let a = k as f32 / 9.0 * std::f32::consts::TAU;
+                self.particles.push(part(
+                    x + a.cos() * 12.0,
+                    gy - 6.0,
+                    a.cos() * 18.0,
+                    -24.0 + a.sin() * 10.0,
+                    1.15,
+                    12.0 + (k % 3) as f32 * 3.0,
+                    (105, 92, 74),
+                    -18.0,
                     PKind::Dot,
                 ));
             }
@@ -1419,7 +1453,7 @@ impl Game {
                 PlantKind::Cabbage | PlantKind::Starfruit => 0.25,
                 PlantKind::Spikeweed => 0.45,
                 PlantKind::Threepeater => 0.4,
-                PlantKind::PotatoMine => 15.0,
+                PlantKind::PotatoMine => 14.0,
                 PlantKind::Squash => -1.0,
                 _ => 0.0,
             },

@@ -84,6 +84,7 @@ pub struct Zombie {
     pub shield: f32,
     pub vaulted: bool,
     pub diverted: bool,
+    pub phase: u8,
 }
 
 pub struct Pea {
@@ -1292,6 +1293,7 @@ impl Game {
         let kills = &mut self.kills;
         let mut bite_sound = false;
         let mut groan = false;
+        let mut spawns: Vec<(ZombieKind, usize, f32)> = Vec::new();
 
         for i in 0..zombies.len() {
             let z = &mut zombies[i];
@@ -1379,11 +1381,86 @@ impl Game {
                 let spd = z.speed * if slow { 0.5 } else { 1.0 };
                 z.x -= spd * dt;
             }
+            // 僵尸专属机制：报纸狂暴、玩偶匣爆炸、矿工出土、蹦极偷植物、巨人扔小鬼、僵王分阶段。
+            match z.kind {
+                ZombieKind::Newspaper if z.phase == 0 && z.hp <= z.max_hp * 0.5 => {
+                    z.phase = 1;
+                    z.speed *= 1.6;
+                    z.flash = 1.0;
+                }
+                ZombieKind::Digger if z.phase == 0 && z.x <= 300.0 => {
+                    z.phase = 1;
+                    z.speed = 45.0;
+                    z.flash = 0.8;
+                }
+                ZombieKind::Jackbox if z.phase == 0 && z.x <= 360.0 => {
+                    z.phase = 1;
+                    let col = (((z.x - GRID_X) / CELL_W).round() as isize).clamp(0, 8) as usize;
+                    for p in plants.iter_mut() {
+                        if p.row.abs_diff(z.row) <= 1 && p.col.abs_diff(col) <= 1 {
+                            p.hp = 0.0;
+                            p.flash = 1.0;
+                        }
+                    }
+                    for _ in 0..18 {
+                        particles.push(part(
+                            z.x, -70.0 + z.row as f32 * h, rng_r(-50.0, 50.0), rng_r(-90.0, 20.0),
+                            0.7, 5.0, (250, 160, 50), 160.0, PKind::Dot,
+                        ));
+                    }
+                    z.hp = 0.0;
+                }
+                ZombieKind::Bungee if z.phase == 0 && z.x <= W - 20.0 => {
+                    z.phase = 1;
+                    if let Some(pi) = plants.iter().enumerate()
+                        .filter(|(_, p)| p.row == z.row && p.hp > 0.0)
+                        .max_by_key(|(_, p)| p.col)
+                        .map(|(i, _)| i)
+                    {
+                        plants[pi].hp = 0.0;
+                        plants[pi].flash = 1.0;
+                    }
+                    for _ in 0..8 {
+                        particles.push(part(
+                            z.x, -90.0, rng_r(-20.0, 20.0), rng_r(-30.0, 30.0),
+                            0.6, 4.0, (210, 210, 220), 40.0, PKind::Dot,
+                        ));
+                    }
+                    z.hp = 0.0;
+                }
+                ZombieKind::Gargantuar if z.phase == 0 && z.hp <= z.max_hp * 0.5 => {
+                    z.phase = 1;
+                    spawns.push((ZombieKind::Imp, z.row, z.x - 10.0));
+                    z.flash = 1.0;
+                }
+                ZombieKind::Boss if z.phase == 0 && z.hp <= z.max_hp * 2.0 / 3.0 => {
+                    z.phase = 1;
+                    spawns.push((ZombieKind::Cone, z.row, z.x + 40.0));
+                    spawns.push((ZombieKind::Bucket, (z.row + 1) % rows, z.x + 70.0));
+                }
+                ZombieKind::Boss if z.phase == 1 && z.hp <= z.max_hp / 3.0 => {
+                    z.phase = 2;
+                    spawns.push((ZombieKind::Football, z.row, z.x + 50.0));
+                    z.speed *= 1.3;
+                }
+                _ => {}
+            }
             if z.hp <= 0.0 {
                 z.dying = true;
                 z.death_t = 0.0;
                 *kills += 1;
             }
+        }
+        for (kind, row, x) in spawns {
+            zombies.push(Zombie {
+                kind, row, x,
+                hp: kind.hp(), max_hp: kind.hp(),
+                speed: self.rng.f(kind.speed_range().0, kind.speed_range().1),
+                t: 0.0, slow: 0.0, eating: false, eat_t: 0.0,
+                dying: false, death_t: 0.0, flash: 0.7,
+                groan: 99.0, hit_flash: 0.0, shield: kind.shield(),
+                vaulted: false, diverted: false, phase: 0,
+            });
         }
         if groan && !bite_sound {
             self.sfx.groan();
@@ -1677,6 +1754,7 @@ impl Game {
                 shield: kind.shield(),
                 vaulted: false,
                 diverted: false,
+                phase: 0,
             });
         }
     }

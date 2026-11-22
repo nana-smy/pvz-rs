@@ -1258,7 +1258,7 @@ fn draw_zombie(p: &P, z: &Zombie, time: f32, h: f32) {
             p.rr(-20.0, -72.0, 40.0, 42.0, 8.0, "#7d1b1b");
             p.rect(-20.0, -56.0, 40.0, 5.0, "#e3c15a");
         }
-        ZombieKind::Newspaper => {
+        ZombieKind::Newspaper if z.phase == 0 => {
             p.rr(16.0, -86.0 + eat_bob, 16.0, 46.0, 3.0, "#efe7d3");
             for k in 0..5 {
                 p.rect(18.0, -80.0 + eat_bob + k as f32 * 8.0, 12.0, 2.0, "#a9a292");
@@ -1306,7 +1306,7 @@ fn draw_zombie(p: &P, z: &Zombie, time: f32, h: f32) {
             p.line(&[(-28.0, -76.0), (-38.0, -94.0), (-32.0, -108.0)], 3.0, "#d9d2bd");
             p.circle(-32.0, -110.0, 5.0, "#e6be44");
         }
-        ZombieKind::Balloon => {
+        ZombieKind::Balloon if z.hp > z.max_hp * 0.55 => {
             p.line(&[(0.0, -105.0), (10.0, -150.0)], 2.0, "#8b8b8b");
             p.ell(10.0, -172.0, 22.0, 28.0, "#d94a4a");
             p.poly(&[(4.0, -206.0), (16.0, -206.0), (10.0, -214.0)], "#b93232");
@@ -1352,6 +1352,7 @@ fn draw_zombie(p: &P, z: &Zombie, time: f32, h: f32) {
             p.circle(18.0, -112.0, 5.0, "#f05a4a");
             p.rect(-52.0, -62.0, 104.0, 8.0, "#9aa2a6");
         }
+        ZombieKind::Newspaper | ZombieKind::Balloon => {}
         ZombieKind::Basic => {}
     }
 

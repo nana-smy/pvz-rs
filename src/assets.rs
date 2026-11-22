@@ -170,6 +170,12 @@ thread_local! {
     static BGS: RefCell<Vec<Option<HtmlImageElement>>> = const { RefCell::new(Vec::new()) };
     static PROJ: RefCell<Vec<Option<HtmlImageElement>>> = const { RefCell::new(Vec::new()) };
     static SHEETS: RefCell<Vec<Option<HtmlImageElement>>> = const { RefCell::new(Vec::new()) };
+    static REANIM: RefCell<Vec<Option<HtmlImageElement>>> = const { RefCell::new(Vec::new()) };
+}
+
+/// 原版 reanim 图集的页面 key：`r_<role>/<clip>` 里的斜杠换成下划线。
+pub fn reanim_key(slot: usize) -> String {
+    format!("r_{}", crate::reanim::KEYS[slot].replace('/', "_"))
 }
 
 const Z_KEYS: [&str; 416] = [
@@ -609,6 +615,7 @@ pub fn init() {
     let mut zs: Vec<Option<HtmlImageElement>> = vec![None; Z_KEYS.len()];
     let mut bgs: Vec<Option<HtmlImageElement>> = vec![None; BG_KEYS.len()];
     let mut ps: Vec<Option<HtmlImageElement>> = vec![None; PROJ_KEYS.len()];
+    let mut rs: Vec<Option<HtmlImageElement>> = vec![None; crate::reanim::KEYS.len()];
     if let Some(window) = web_sys::window() {
         if let Ok(obj) = js_sys::Reflect::get(&window, &"__pvzAssets".into()) {
             if !obj.is_undefined() && !obj.is_null() {
@@ -624,6 +631,9 @@ pub fn init() {
                 for (i, k) in PROJ_KEYS.iter().enumerate() {
                     ps[i] = get_img(&obj, k);
                 }
+                for i in 0..crate::reanim::KEYS.len() {
+                    rs[i] = get_img(&obj, &reanim_key(i));
+                }
             }
         }
     }
@@ -631,6 +641,28 @@ pub fn init() {
     ZOMBIES.with(|m| *m.borrow_mut() = zs);
     BGS.with(|m| *m.borrow_mut() = bgs);
     PROJ.with(|m| *m.borrow_mut() = ps);
+    REANIM.with(|m| *m.borrow_mut() = rs);
+}
+
+/// 取原版 reanim 图集：先看初始化时的缓存，未就绪则从 window.__pvzAssets 实时取。
+pub fn reanim_img(slot: u16) -> Option<HtmlImageElement> {
+    let i = slot as usize;
+    if i >= crate::reanim::KEYS.len() {
+        return None;
+    }
+    let cached = REANIM.with(|m| m.borrow().get(i).cloned().flatten());
+    if cached.is_some() {
+        return cached;
+    }
+    let img = live(&reanim_key(i))?;
+    REANIM.with(|m| {
+        let mut v = m.borrow_mut();
+        if v.len() < crate::reanim::KEYS.len() {
+            v.resize(crate::reanim::KEYS.len(), None);
+        }
+        v[i] = Some(img.clone());
+    });
+    Some(img)
 }
 
 pub fn ready() -> bool {

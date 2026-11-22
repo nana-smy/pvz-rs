@@ -76,6 +76,7 @@
 </div>
 <div id="err"></div>
 
+<script src="reanim_keys.js"></script>
 <script type="module">
 
   const canvas = document.getElementById('game');
@@ -597,6 +598,8 @@
     mower: './assets/audio/lawnmower.wav',
     bite: './assets/audio/chomp.wav',
   };
+  // 原版 reanim 全量动画（74 类角色 / 165 clips，12fps 逐帧烘焙的网格图集）
+  Object.assign(IMG_SRC, window.__REANIM_SRC || {});
   window.__pvzAssets = {};
   const sfxCache = {};
   window.__pvzSfx = (name) => {
@@ -753,7 +756,7 @@
     } catch (e) { console.warn('[pvz] 后台素材包失败', url, e); }
   };
   packLater('./assets-core.tar', 40, () => {
-    Object.entries(IMG_SRC).filter(([k]) => !k.startsWith('z_') && !UI_KEYS.has(k)).forEach(([k, v]) => enqueue(k, v));
+    Object.entries(IMG_SRC).filter(([k]) => !k.startsWith('z_') && !k.startsWith('r_') && !UI_KEYS.has(k)).forEach(([k, v]) => enqueue(k, v));
   });
   packLater('./assets-audio.tar', 10, () => {
     for (const k of Object.keys(SFX_SRC)) {
@@ -764,6 +767,9 @@
       const m = packUrls.get('audio/music.mp3');
       if (m && bgm) bgm.src = m;
     }
+  });
+  packLater('./assets-reanim.tar', 100, () => {
+    Object.entries(IMG_SRC).filter(([k]) => k.startsWith('r_')).forEach(([k, v]) => enqueue(k, v));
   });
   packLater('./assets-zombies.tar', 100, () => {
     Object.entries(IMG_SRC).filter(([k]) => k.startsWith('z_')).forEach(([k, v]) => enqueue(k, v));

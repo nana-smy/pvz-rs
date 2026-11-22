@@ -796,7 +796,102 @@ fn art_height(art: Art) -> f32 {
         Art::Imitater => 76.0,
     }
 }
-// 原版 reanim 烘焙帧：身体、头、叶片、嘴分别按各自的骨骼变换合成。
+// ===== 原版 reanim 图集绘制（12fps 逐帧烘焙的网格图集）=====
+fn reanim_plant_name(art: Art) -> &'static str {
+    match art {
+        Art::Cherry => "cherry",
+        Art::Cabbage => "cabbage",
+        Art::UmbrellaLeaf => "umbrelleaf",
+        _ => art.key(),
+    }
+}
+
+fn reanim_zombie_name(kind: ZombieKind) -> &'static str {
+    match kind {
+        ZombieKind::Basic => "basic",
+        ZombieKind::Cone => "cone",
+        ZombieKind::Bucket => "bucket",
+        ZombieKind::Flag => "flag",
+        ZombieKind::PoleVault => "polevault",
+        ZombieKind::ScreenDoor => "screendoor",
+        ZombieKind::Football => "football",
+        ZombieKind::Ladder => "ladder",
+        ZombieKind::Newspaper => "newspaper",
+        ZombieKind::Dancing => "dancing",
+        ZombieKind::BackupDancer => "backup",
+        ZombieKind::DuckyTube => "duckytube",
+        ZombieKind::Snorkel => "snorkel",
+        ZombieKind::Zomboni => "zamboni",
+        ZombieKind::Bobsled => "bobsled",
+        ZombieKind::DolphinRider => "dolphinrider",
+        ZombieKind::Jackbox => "jackbox",
+        ZombieKind::Balloon => "balloon",
+        ZombieKind::Digger => "digger",
+        ZombieKind::Pogo => "pogo",
+        ZombieKind::Yeti => "yeti",
+        ZombieKind::Bungee => "bungee",
+        ZombieKind::Catapult => "catapult",
+        ZombieKind::Gargantuar => "gargantuar",
+        ZombieKind::Imp => "imp",
+        ZombieKind::Boss => "boss",
+    }
+}
+
+/// 从 cols x rows 网格图集取第 frame 帧，铺到 (dx, dy, dw, dh)。
+fn draw_cell(c: &CanvasRenderingContext2d, img: &HtmlImageElement, clip: &crate::reanim::Clip, frame: u32, dx: f32, dy: f32, dw: f32, dh: f32) {
+    let cols = clip.cols.max(1) as u32;
+    let col = (frame % cols) as f64;
+    let row = (frame / cols) as f64;
+    draw_img_rect(
+        c, img,
+        col * clip.w as f64, row * clip.h as f64,
+        clip.w as f64, clip.h as f64,
+        dx as f64, dy as f64, dw as f64, dh as f64,
+    );
+}
+
+fn draw_reanim_plant(p: &P, kind: PlantKind, art: Art, cx: f32, base: f32, t: f32, hp: f32, fuse: f32, anim: f32) -> bool {
+    let Some(ch) = crate::reanim::by_name(reanim_plant_name(art)) else { return false };
+    let shooting = anim > 0.0 && ch.has(&ch.shoot);
+    let clip = if shooting { ch.shoot } else { ch.base };
+    if !ch.has(&clip) || ch.h <= 0.0 {
+        return false;
+    }
+    let Some(img) = assets::reanim_img(clip.slot) else { return false };
+    let idx = art as usize;
+    let scale = art_height(art) / ch.h;
+    let dw = clip.w * scale;
+    let dh = clip.h * scale;
+    let frame = if shooting {
+        let dur = if art == Art::Starfruit { 0.16 } else { 0.20 };
+        let progress = (1.0 - (anim / dur).clamp(0.0, 1.0)) * clip.frames as f32;
+        (progress as u32).min(clip.frames.saturating_sub(1) as u32)
+    } else {
+        ((t + idx as f32 * 0.17) * clip.fps.max(1.0) * 0.62) as u32 % clip.frames.max(1) as u32
+    };
+    let pulse = if kind == PlantKind::Cherry && fuse < 0.55 {
+        1.0 + (t * 16.0).sin().abs() * 0.10
+    } else {
+        1.0
+    };
+    p.save();
+    p.c.translate(cx as f64, base as f64);
+    p.c.scale(pulse as f64, pulse as f64);
+    // 锚点 (ax, ay) 是 reanim 原点（脚底/贴地点）在单元格内的位置。
+    draw_cell(p.c, &img, &clip, frame, -ch.ax * scale, -ch.ay * scale, dw, dh);
+    if kind == PlantKind::WallNut && hp < 0.7 {
+        let a = (0.7 - hp) / 0.7;
+        p.line(&[(-dw*0.22, -dh*0.72), (-dw*0.05, -dh*0.5), (-dw*0.16, -dh*0.36)], 2.0, rgba(70,40,15, 0.55*a));
+        p.line(&[(dw*0.18, -dh*0.3), (dw*0.02, -dh*0.18), (dw*0.12, -dh*0.05)], 2.2, rgba(70,40,15, 0.5*a));
+        if hp < 0.35 {
+            p.line(&[(-dw*0.3, -dh*0.4), (-dw*0.12, -dh*0.26)], 2.4, rgba(60,32,10, 0.6));
+        }
+    }
+    p.restore();
+    true
+}
+
+// 旧版 16 帧条带（Repeater 等没有 reanim 源的角色继续用）。
 // 射击时用 anim_shooting，嘴部开合和头部后坐都来自原版轨道，而不是整张图平移。
 fn draw_anim_plant(p: &P, kind: PlantKind, art: Art, cx: f32, base: f32, t: f32, hp: f32, fuse: f32, anim: f32) -> bool {
     let idx = art as usize;
@@ -860,6 +955,9 @@ fn draw_anim_plant(p: &P, kind: PlantKind, art: Art, cx: f32, base: f32, t: f32,
 
 fn draw_plant_anim(p: &P, kind: PlantKind, cx: f32, base: f32, t: f32, hp: f32, fuse: f32, anim: f32) {
     if let Some(art) = art_of(kind) {
+        if draw_reanim_plant(p, kind, art, cx, base, t, hp, fuse, anim) {
+            return;
+        }
         if draw_anim_plant(p, kind, art, cx, base, t, hp, fuse, anim) {
             return;
         }
@@ -1083,6 +1181,63 @@ fn draw_shovel_icon(p: &P, x: f32, y: f32, s: f32, rot: f32) {
 fn draw_zombie(p: &P, z: &Zombie, time: f32, h: f32) {
     let gy = row_ground(z.row, h) + 2.0;
     p.ell(z.x, gy + 8.0, 26.0, 8.0, rgba(20, 40, 10, 0.22));
+    let target_h = match z.kind {
+        ZombieKind::Gargantuar => 330.0,
+        ZombieKind::Boss => 380.0,
+        ZombieKind::Bungee => 300.0,
+        ZombieKind::Imp => 150.0,
+        ZombieKind::Zomboni | ZombieKind::Catapult => 290.0,
+        ZombieKind::Bobsled | ZombieKind::DolphinRider => 250.0,
+        _ => 236.0,
+    };
+    // 原版 reanim 图集优先：走路 / 啃食 / 倒地分别对应原版 clip。
+    if let Some(ch) = crate::reanim::by_name(reanim_zombie_name(z.kind)) {
+        let clip = if z.dying && ch.has(&ch.die) {
+            ch.die
+        } else if z.eating && ch.has(&ch.eat) {
+            ch.eat
+        } else {
+            ch.base
+        };
+        if ch.has(&clip) && ch.h > 0.0 {
+            if let Some(img) = assets::reanim_img(clip.slot) {
+                let scale = target_h / ch.h;
+                let dw = clip.w * scale;
+                let dh = clip.h * scale;
+                let frame = if z.dying {
+                    let k = (z.death_t / 0.8).clamp(0.0, 1.0);
+                    ((k * clip.frames as f32) as u32).min(clip.frames.saturating_sub(1) as u32)
+                } else {
+                    let n = clip.frames.max(1) as i32;
+                    let phase = (time * clip.fps.max(1.0) + z.x * 0.045 + z.row as f32 * 1.3) as i32;
+                    phase.rem_euclid(n) as u32
+                };
+                p.save();
+                p.c.translate(z.x as f64, gy as f64);
+                if z.dying {
+                    let k = (z.death_t / 0.8).min(1.0);
+                    p.c.rotate((-1.25 * k) as f64);
+                    p.alpha(1.0 - k * 0.85);
+                }
+                let lean = if z.eating { -0.06 } else { 0.0 };
+                p.c.rotate(lean as f64);
+                draw_cell(p.c, &img, &clip, frame, -ch.ax * scale, -ch.ay * scale, dw, dh);
+                if z.slow > 0.0 {
+                    p.rect(-dw * 0.42, -dh * 0.95, dw * 0.84, dh * 0.9, rgba(120, 210, 245, 0.20));
+                }
+                if z.flash > 0.0 {
+                    p.save();
+                    p.alpha((z.flash * 0.38).min(0.38));
+                    p.rect(-dw * 0.42, -dh * 0.95, dw * 0.84, dh * 0.9, "#ffffff");
+                    p.restore();
+                    p.alpha(if z.dying { (1.0 - (z.death_t / 0.8).min(1.0) * 0.85).max(0.0) } else { 1.0 });
+                }
+                p.restore();
+                p.alpha(1.0);
+                return;
+            }
+        }
+    }
     let frame = (((time * 12.0 + z.x * 0.045 + z.row as f32 * 1.3) as i32).rem_euclid(16)) as u8;
     if let Some(img) = assets::zombie(z.kind as u8, frame) {
         p.save();
@@ -1096,23 +1251,13 @@ fn draw_zombie(p: &P, z: &Zombie, time: f32, h: f32) {
         let bob = walk * 1.4;
         let lean = if z.eating { -0.05 } else { 0.0 };
         p.c.rotate(lean as f64);
-        let target_h = match z.kind {
-            ZombieKind::Gargantuar => 330.0,
-            ZombieKind::Boss => 380.0,
-            ZombieKind::Bungee => 300.0,
-            ZombieKind::Imp => 150.0,
-            ZombieKind::Zomboni | ZombieKind::Catapult => 290.0,
-            ZombieKind::Bobsled | ZombieKind::DolphinRider => 250.0,
-            _ => 236.0,
-        };
         let scale = target_h / img.height().max(1) as f32;
         let w = img.width() as f32 * scale;
         let h = target_h;
-        let foot_pad = 0.0;
         let _ = p.c.draw_image_with_html_image_element_and_dw_and_dh(
             &img,
             (-w * 0.5) as f64,
-            (-h + foot_pad + bob) as f64,
+            (-h + bob) as f64,
             w as f64,
             h as f64,
         );

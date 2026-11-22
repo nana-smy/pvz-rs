@@ -52,3 +52,4 @@ if __name__ == '__main__':
     build('assets-core.tar', os.path.join(ROOT, 'assets-webp'), ['plants', 'bg', 'projectiles'])
     build('assets-zombies.tar', os.path.join(ROOT, 'assets-webp'), ['zombies'])
     build('assets-audio.tar', os.path.join(ROOT, 'assets'), ['audio'])
+    build('assets-reanim.tar', os.path.join(ROOT, 'assets'), ['reanim'])

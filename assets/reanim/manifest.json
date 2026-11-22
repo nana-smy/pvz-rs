@@ -1,0 +1,2195 @@
+{
+  "fps": 12,
+  "chars": {
+    "sunflower": {
+      "w": 83.0,
+      "h": 83.0,
+      "ax": 41.5,
+      "ay": 83.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/sunflower/idle.webp",
+          "frames": 25,
+          "cols": 25,
+          "rows": 1,
+          "fps": 12.0,
+          "bytes": 62264
+        }
+      }
+    },
+    "peashooter": {
+      "w": 83.0,
+      "h": 80.0,
+      "ax": 41.5,
+      "ay": 80.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/peashooter/idle.webp",
+          "frames": 25,
+          "cols": 25,
+          "rows": 1,
+          "fps": 12.0,
+          "bytes": 46216
+        },
+        "shoot": {
+          "file": "reanim/peashooter/shoot.webp",
+          "frames": 25,
+          "cols": 25,
+          "rows": 1,
+          "fps": 12.0,
+          "bytes": 25964
+        }
+      }
+    },
+    "snowpea": {
+      "w": 81.0,
+      "h": 80.0,
+      "ax": 40.5,
+      "ay": 80.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/snowpea/idle.webp",
+          "frames": 25,
+          "cols": 25,
+          "rows": 1,
+          "fps": 12.0,
+          "bytes": 53510
+        },
+        "shoot": {
+          "file": "reanim/snowpea/shoot.webp",
+          "frames": 25,
+          "cols": 25,
+          "rows": 1,
+          "fps": 12.0,
+          "bytes": 31450
+        }
+      }
+    },
+    "wallnut": {
+      "w": 85.0,
+      "h": 82.0,
+      "ax": 42.5,
+      "ay": 82.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/wallnut/idle.webp",
+          "frames": 17,
+          "cols": 17,
+          "rows": 1,
+          "fps": 12.0,
+          "bytes": 27276
+        }
+      }
+    },
+    "cherry": {
+      "w": 98.0,
+      "h": 78.0,
+      "ax": 49.0,
+      "ay": 78.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/cherry/idle.webp",
+          "frames": 13,
+          "cols": 13,
+          "rows": 1,
+          "fps": 12.0,
+          "bytes": 23578
+        }
+      }
+    },
+    "potatomine": {
+      "w": 104.0,
+      "h": 84.0,
+      "ax": 52.0,
+      "ay": 84.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/potatomine/idle.webp",
+          "frames": 11,
+          "cols": 11,
+          "rows": 1,
+          "fps": 12.0,
+          "bytes": 18896
+        },
+        "special": {
+          "file": "reanim/potatomine/special.webp",
+          "frames": 19,
+          "cols": 19,
+          "rows": 1,
+          "fps": 12.0,
+          "bytes": 20926
+        }
+      }
+    },
+    "jalapeno": {
+      "w": 56.0,
+      "h": 85.0,
+      "ax": 28.0,
+      "ay": 85.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/jalapeno/idle.webp",
+          "frames": 7,
+          "cols": 7,
+          "rows": 1,
+          "fps": 12.0,
+          "bytes": 8810
+        }
+      }
+    },
+    "squash": {
+      "w": 81.0,
+      "h": 98.0,
+      "ax": 40.5,
+      "ay": 98.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/squash/idle.webp",
+          "frames": 19,
+          "cols": 19,
+          "rows": 1,
+          "fps": 12.0,
+          "bytes": 37338
+        }
+      }
+    },
+    "cabbage": {
+      "w": 105.0,
+      "h": 96.0,
+      "ax": 52.5,
+      "ay": 96.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/cabbage/idle.webp",
+          "frames": 31,
+          "cols": 31,
+          "rows": 1,
+          "fps": 12.0,
+          "bytes": 71290
+        },
+        "shoot": {
+          "file": "reanim/cabbage/shoot.webp",
+          "frames": 38,
+          "cols": 38,
+          "rows": 1,
+          "fps": 12.0,
+          "bytes": 83962
+        }
+      }
+    },
+    "starfruit": {
+      "w": 86.0,
+      "h": 80.0,
+      "ax": 43.0,
+      "ay": 80.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/starfruit/idle.webp",
+          "frames": 17,
+          "cols": 17,
+          "rows": 1,
+          "fps": 12.0,
+          "bytes": 32988
+        },
+        "shoot": {
+          "file": "reanim/starfruit/shoot.webp",
+          "frames": 17,
+          "cols": 17,
+          "rows": 1,
+          "fps": 12.0,
+          "bytes": 32650
+        }
+      }
+    },
+    "garlic": {
+      "w": 69.0,
+      "h": 117.0,
+      "ax": 34.5,
+      "ay": 117.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/garlic/idle.webp",
+          "frames": 15,
+          "cols": 15,
+          "rows": 1,
+          "fps": 12.0,
+          "bytes": 22294
+        }
+      }
+    },
+    "flowerpot": {
+      "w": 102.0,
+      "h": 82.0,
+      "ax": 11.0,
+      "ay": 4.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/flowerpot/idle.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 42756
+        },
+        "shoot": {
+          "file": "reanim/flowerpot/shoot.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 42756
+        }
+      }
+    },
+    "chomper": {
+      "w": 106.0,
+      "h": 104.0,
+      "ax": 11.0,
+      "ay": 10.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/chomper/idle.webp",
+          "frames": 8,
+          "cols": 8,
+          "rows": 1,
+          "fps": 12.0,
+          "bytes": 23146
+        },
+        "shoot": {
+          "file": "reanim/chomper/shoot.webp",
+          "frames": 8,
+          "cols": 8,
+          "rows": 1,
+          "fps": 12.0,
+          "bytes": 23146
+        }
+      }
+    },
+    "spikeweed": {
+      "w": 91.0,
+      "h": 45.0,
+      "ax": 6.0,
+      "ay": -34.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/spikeweed/idle.webp",
+          "frames": 21,
+          "cols": 8,
+          "rows": 3,
+          "fps": 12.0,
+          "bytes": 26694
+        },
+        "shoot": {
+          "file": "reanim/spikeweed/shoot.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 39000
+        }
+      }
+    },
+    "puffshroom": {
+      "w": 46.0,
+      "h": 46.0,
+      "ax": -18.0,
+      "ay": -22.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/puffshroom/idle.webp",
+          "frames": 22,
+          "cols": 8,
+          "rows": 3,
+          "fps": 12.0,
+          "bytes": 13380
+        },
+        "shoot": {
+          "file": "reanim/puffshroom/shoot.webp",
+          "frames": 5,
+          "cols": 5,
+          "rows": 1,
+          "fps": 12.0,
+          "bytes": 3368
+        }
+      }
+    },
+    "sunshroom": {
+      "w": 61.0,
+      "h": 66.0,
+      "ax": -15.0,
+      "ay": -6.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/sunshroom/idle.webp",
+          "frames": 25,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 22162
+        },
+        "shoot": {
+          "file": "reanim/sunshroom/shoot.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 30984
+        }
+      }
+    },
+    "fumeshroom": {
+      "w": 131.0,
+      "h": 96.0,
+      "ax": 4.0,
+      "ay": 10.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/fumeshroom/idle.webp",
+          "frames": 25,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 40194
+        },
+        "shoot": {
+          "file": "reanim/fumeshroom/shoot.webp",
+          "frames": 20,
+          "cols": 8,
+          "rows": 3,
+          "fps": 12.0,
+          "bytes": 32096
+        }
+      }
+    },
+    "gravebuster": {
+      "w": 116.0,
+      "h": 88.0,
+      "ax": 19.0,
+      "ay": 8.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/gravebuster/idle.webp",
+          "frames": 28,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 45872
+        },
+        "shoot": {
+          "file": "reanim/gravebuster/shoot.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 51970
+        }
+      }
+    },
+    "hypnoshroom": {
+      "w": 89.0,
+      "h": 88.0,
+      "ax": 5.0,
+      "ay": 5.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/hypnoshroom/idle.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 39942
+        },
+        "shoot": {
+          "file": "reanim/hypnoshroom/shoot.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 39942
+        }
+      }
+    },
+    "scaredyshroom": {
+      "w": 72.0,
+      "h": 85.0,
+      "ax": -1.0,
+      "ay": 3.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/scaredyshroom/idle.webp",
+          "frames": 25,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 24756
+        },
+        "shoot": {
+          "file": "reanim/scaredyshroom/shoot.webp",
+          "frames": 25,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 24756
+        }
+      }
+    },
+    "iceshroom": {
+      "w": 90.0,
+      "h": 83.0,
+      "ax": 5.0,
+      "ay": 2.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/iceshroom/idle.webp",
+          "frames": 17,
+          "cols": 8,
+          "rows": 3,
+          "fps": 12.0,
+          "bytes": 39170
+        },
+        "shoot": {
+          "file": "reanim/iceshroom/shoot.webp",
+          "frames": 17,
+          "cols": 8,
+          "rows": 3,
+          "fps": 12.0,
+          "bytes": 39170
+        }
+      }
+    },
+    "doomshroom": {
+      "w": 100.0,
+      "h": 86.0,
+      "ax": 9.0,
+      "ay": 1.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/doomshroom/idle.webp",
+          "frames": 25,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 29302
+        },
+        "shoot": {
+          "file": "reanim/doomshroom/shoot.webp",
+          "frames": 25,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 29302
+        }
+      }
+    },
+    "torchwood": {
+      "w": 81.0,
+      "h": 104.0,
+      "ax": -1.0,
+      "ay": 20.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/torchwood/idle.webp",
+          "frames": 19,
+          "cols": 8,
+          "rows": 3,
+          "fps": 12.0,
+          "bytes": 41764
+        },
+        "shoot": {
+          "file": "reanim/torchwood/shoot.webp",
+          "frames": 19,
+          "cols": 8,
+          "rows": 3,
+          "fps": 12.0,
+          "bytes": 41764
+        }
+      }
+    },
+    "tallnut": {
+      "w": 100.0,
+      "h": 135.0,
+      "ax": 10.0,
+      "ay": 44.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/tallnut/idle.webp",
+          "frames": 17,
+          "cols": 8,
+          "rows": 3,
+          "fps": 12.0,
+          "bytes": 38696
+        },
+        "shoot": {
+          "file": "reanim/tallnut/shoot.webp",
+          "frames": 17,
+          "cols": 8,
+          "rows": 3,
+          "fps": 12.0,
+          "bytes": 38696
+        }
+      }
+    },
+    "seashroom": {
+      "w": 57.0,
+      "h": 66.0,
+      "ax": -12.0,
+      "ay": -14.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/seashroom/idle.webp",
+          "frames": 25,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 32668
+        },
+        "shoot": {
+          "file": "reanim/seashroom/shoot.webp",
+          "frames": 14,
+          "cols": 8,
+          "rows": 2,
+          "fps": 12.0,
+          "bytes": 19414
+        }
+      }
+    },
+    "plantern": {
+      "w": 97.0,
+      "h": 100.0,
+      "ax": 9.0,
+      "ay": 8.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/plantern/idle.webp",
+          "frames": 20,
+          "cols": 8,
+          "rows": 3,
+          "fps": 12.0,
+          "bytes": 38292
+        },
+        "shoot": {
+          "file": "reanim/plantern/shoot.webp",
+          "frames": 20,
+          "cols": 8,
+          "rows": 3,
+          "fps": 12.0,
+          "bytes": 38292
+        }
+      }
+    },
+    "cactus": {
+      "w": 109.0,
+      "h": 175.0,
+      "ax": 22.0,
+      "ay": 92.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/cactus/idle.webp",
+          "frames": 25,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 89172
+        },
+        "shoot": {
+          "file": "reanim/cactus/shoot.webp",
+          "frames": 25,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 89172
+        }
+      }
+    },
+    "blover": {
+      "w": 164.0,
+      "h": 147.0,
+      "ax": 34.0,
+      "ay": 47.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/blover/idle.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 42776
+        },
+        "shoot": {
+          "file": "reanim/blover/shoot.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 42776
+        }
+      }
+    },
+    "splitpea": {
+      "w": 66.0,
+      "h": 46.0,
+      "ax": -14.0,
+      "ay": -8.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/splitpea/idle.webp",
+          "frames": 15,
+          "cols": 8,
+          "rows": 2,
+          "fps": 12.0,
+          "bytes": 13870
+        },
+        "shoot": {
+          "file": "reanim/splitpea/shoot.webp",
+          "frames": 15,
+          "cols": 8,
+          "rows": 2,
+          "fps": 12.0,
+          "bytes": 13870
+        }
+      }
+    },
+    "pumpkin": {
+      "w": 107.0,
+      "h": 76.0,
+      "ax": 11.0,
+      "ay": -4.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/pumpkin/idle.webp",
+          "frames": 21,
+          "cols": 8,
+          "rows": 3,
+          "fps": 12.0,
+          "bytes": 37946
+        },
+        "shoot": {
+          "file": "reanim/pumpkin/shoot.webp",
+          "frames": 21,
+          "cols": 8,
+          "rows": 3,
+          "fps": 12.0,
+          "bytes": 37946
+        }
+      }
+    },
+    "magnetshroom": {
+      "w": 74.0,
+      "h": 94.0,
+      "ax": -38.0,
+      "ay": 16.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/magnetshroom/idle.webp",
+          "frames": 25,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 25854
+        },
+        "shoot": {
+          "file": "reanim/magnetshroom/shoot.webp",
+          "frames": 24,
+          "cols": 8,
+          "rows": 3,
+          "fps": 12.0,
+          "bytes": 21284
+        }
+      }
+    },
+    "kernelpult": {
+      "w": 120.0,
+      "h": 114.0,
+      "ax": 29.0,
+      "ay": 29.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/kernelpult/idle.webp",
+          "frames": 19,
+          "cols": 8,
+          "rows": 3,
+          "fps": 12.0,
+          "bytes": 55300
+        },
+        "shoot": {
+          "file": "reanim/kernelpult/shoot.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 61696
+        }
+      }
+    },
+    "coffeebean": {
+      "w": 62.0,
+      "h": 157.0,
+      "ax": -9.0,
+      "ay": 2.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/coffeebean/idle.webp",
+          "frames": 29,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 26488
+        },
+        "shoot": {
+          "file": "reanim/coffeebean/shoot.webp",
+          "frames": 29,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 26488
+        }
+      }
+    },
+    "umbrelleaf": {
+      "w": 95.0,
+      "h": 76.0,
+      "ax": 8.0,
+      "ay": 1.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/umbrelleaf/idle.webp",
+          "frames": 15,
+          "cols": 8,
+          "rows": 2,
+          "fps": 12.0,
+          "bytes": 26948
+        },
+        "shoot": {
+          "file": "reanim/umbrelleaf/shoot.webp",
+          "frames": 28,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 45742
+        }
+      }
+    },
+    "marigold": {
+      "w": 66.0,
+      "h": 88.0,
+      "ax": -10.0,
+      "ay": 4.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/marigold/idle.webp",
+          "frames": 25,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 42024
+        },
+        "shoot": {
+          "file": "reanim/marigold/shoot.webp",
+          "frames": 25,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 42024
+        }
+      }
+    },
+    "melonpult": {
+      "w": 131.0,
+      "h": 115.0,
+      "ax": 56.0,
+      "ay": 34.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/melonpult/idle.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 74062
+        },
+        "shoot": {
+          "file": "reanim/melonpult/shoot.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 46660
+        }
+      }
+    },
+    "gatlingpea": {
+      "w": 91.0,
+      "h": 56.0,
+      "ax": -6.0,
+      "ay": 2.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/gatlingpea/idle.webp",
+          "frames": 25,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 31332
+        },
+        "shoot": {
+          "file": "reanim/gatlingpea/shoot.webp",
+          "frames": 29,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 37526
+        }
+      }
+    },
+    "twinsunflower": {
+      "w": 97.0,
+      "h": 97.0,
+      "ax": 9.0,
+      "ay": 12.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/twinsunflower/idle.webp",
+          "frames": 25,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 77144
+        },
+        "shoot": {
+          "file": "reanim/twinsunflower/shoot.webp",
+          "frames": 25,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 77144
+        }
+      }
+    },
+    "gloomshroom": {
+      "w": 112.0,
+      "h": 97.0,
+      "ax": 15.0,
+      "ay": 15.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/gloomshroom/idle.webp",
+          "frames": 20,
+          "cols": 8,
+          "rows": 3,
+          "fps": 12.0,
+          "bytes": 37236
+        },
+        "shoot": {
+          "file": "reanim/gloomshroom/shoot.webp",
+          "frames": 20,
+          "cols": 8,
+          "rows": 3,
+          "fps": 12.0,
+          "bytes": 37236
+        }
+      }
+    },
+    "cattail": {
+      "w": 119.0,
+      "h": 88.0,
+      "ax": 29.0,
+      "ay": 4.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/cattail/idle.webp",
+          "frames": 19,
+          "cols": 8,
+          "rows": 3,
+          "fps": 12.0,
+          "bytes": 50438
+        },
+        "shoot": {
+          "file": "reanim/cattail/shoot.webp",
+          "frames": 16,
+          "cols": 8,
+          "rows": 2,
+          "fps": 12.0,
+          "bytes": 42190
+        }
+      }
+    },
+    "wintermelon": {
+      "w": 131.0,
+      "h": 125.0,
+      "ax": 56.0,
+      "ay": 44.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/wintermelon/idle.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 90012
+        },
+        "shoot": {
+          "file": "reanim/wintermelon/shoot.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 53182
+        }
+      }
+    },
+    "goldmagnet": {
+      "w": 101.0,
+      "h": 88.0,
+      "ax": 14.0,
+      "ay": 8.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/goldmagnet/idle.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 60326
+        },
+        "shoot": {
+          "file": "reanim/goldmagnet/shoot.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 57078
+        }
+      }
+    },
+    "spikerock": {
+      "w": 94.0,
+      "h": 55.0,
+      "ax": 6.0,
+      "ay": -23.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/spikerock/idle.webp",
+          "frames": 15,
+          "cols": 8,
+          "rows": 2,
+          "fps": 12.0,
+          "bytes": 23306
+        },
+        "shoot": {
+          "file": "reanim/spikerock/shoot.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 47036
+        }
+      }
+    },
+    "cobcannon": {
+      "w": 193.0,
+      "h": 118.0,
+      "ax": 26.0,
+      "ay": 26.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/cobcannon/idle.webp",
+          "frames": 19,
+          "cols": 8,
+          "rows": 3,
+          "fps": 12.0,
+          "bytes": 76818
+        },
+        "shoot": {
+          "file": "reanim/cobcannon/shoot.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 99278
+        }
+      }
+    },
+    "imitater": {
+      "w": 60.0,
+      "h": 85.0,
+      "ax": -10.0,
+      "ay": 7.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/imitater/idle.webp",
+          "frames": 25,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 31278
+        },
+        "shoot": {
+          "file": "reanim/imitater/shoot.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 38876
+        }
+      }
+    },
+    "basic": {
+      "w": 102.0,
+      "h": 155.0,
+      "ax": 10.0,
+      "ay": 17.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "walk": {
+          "file": "reanim/basic/walk.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 92242
+        },
+        "eat": {
+          "file": "reanim/basic/eat.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 84936
+        },
+        "die": {
+          "file": "reanim/basic/die.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 43844
+        },
+        "special": {
+          "file": "reanim/basic/special.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 57692
+        }
+      }
+    },
+    "cone": {
+      "w": 106.0,
+      "h": 175.0,
+      "ax": 11.0,
+      "ay": 36.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "walk": {
+          "file": "reanim/cone/walk.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 105462
+        },
+        "eat": {
+          "file": "reanim/cone/eat.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 97862
+        },
+        "die": {
+          "file": "reanim/cone/die.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 44340
+        },
+        "special": {
+          "file": "reanim/cone/special.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 71234
+        }
+      }
+    },
+    "bucket": {
+      "w": 110.0,
+      "h": 168.0,
+      "ax": 17.0,
+      "ay": 29.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "walk": {
+          "file": "reanim/bucket/walk.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 102524
+        },
+        "eat": {
+          "file": "reanim/bucket/eat.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 95818
+        },
+        "die": {
+          "file": "reanim/bucket/die.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 44714
+        },
+        "special": {
+          "file": "reanim/bucket/special.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 65434
+        }
+      }
+    },
+    "screendoor": {
+      "w": 120.0,
+      "h": 164.0,
+      "ax": 28.0,
+      "ay": 17.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "walk": {
+          "file": "reanim/screendoor/walk.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 156392
+        },
+        "eat": {
+          "file": "reanim/screendoor/eat.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 111466
+        },
+        "die": {
+          "file": "reanim/screendoor/die.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 45258
+        },
+        "special": {
+          "file": "reanim/screendoor/special.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 59818
+        }
+      }
+    },
+    "duckytube": {
+      "w": 104.0,
+      "h": 155.0,
+      "ax": 12.0,
+      "ay": 17.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "walk": {
+          "file": "reanim/duckytube/walk.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 102816
+        },
+        "eat": {
+          "file": "reanim/duckytube/eat.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 100974
+        },
+        "die": {
+          "file": "reanim/duckytube/die.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 44144
+        },
+        "special": {
+          "file": "reanim/duckytube/special.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 91800
+        }
+      }
+    },
+    "flag": {
+      "w": 122.0,
+      "h": 155.0,
+      "ax": 30.0,
+      "ay": 17.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "walk": {
+          "file": "reanim/flag/walk.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 99932
+        },
+        "eat": {
+          "file": "reanim/flag/eat.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 90480
+        },
+        "die": {
+          "file": "reanim/flag/die.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 45426
+        },
+        "special": {
+          "file": "reanim/flag/special.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 63154
+        }
+      }
+    },
+    "polevault": {
+      "w": 115.0,
+      "h": 180.0,
+      "ax": 3.0,
+      "ay": 30.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "walk": {
+          "file": "reanim/polevault/walk.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 109706
+        },
+        "eat": {
+          "file": "reanim/polevault/eat.webp",
+          "frames": 28,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 103392
+        },
+        "die": {
+          "file": "reanim/polevault/die.webp",
+          "frames": 27,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 37846
+        },
+        "special": {
+          "file": "reanim/polevault/special.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 45054
+        }
+      }
+    },
+    "football": {
+      "w": 158.0,
+      "h": 194.0,
+      "ax": 22.0,
+      "ay": 42.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "walk": {
+          "file": "reanim/football/walk.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 112736
+        },
+        "eat": {
+          "file": "reanim/football/eat.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 129260
+        },
+        "die": {
+          "file": "reanim/football/die.webp",
+          "frames": 18,
+          "cols": 8,
+          "rows": 3,
+          "fps": 12.0,
+          "bytes": 24082
+        },
+        "special": {
+          "file": "reanim/football/special.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 110968
+        }
+      }
+    },
+    "ladder": {
+      "w": 117.0,
+      "h": 171.0,
+      "ax": 18.0,
+      "ay": 22.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "walk": {
+          "file": "reanim/ladder/walk.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 99728
+        },
+        "eat": {
+          "file": "reanim/ladder/eat.webp",
+          "frames": 24,
+          "cols": 8,
+          "rows": 3,
+          "fps": 12.0,
+          "bytes": 75826
+        },
+        "die": {
+          "file": "reanim/ladder/die.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 44632
+        },
+        "special": {
+          "file": "reanim/ladder/special.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 137438
+        }
+      }
+    },
+    "newspaper": {
+      "w": 123.0,
+      "h": 165.0,
+      "ax": 27.0,
+      "ay": 19.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "walk": {
+          "file": "reanim/newspaper/walk.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 119880
+        },
+        "eat": {
+          "file": "reanim/newspaper/eat.webp",
+          "frames": 24,
+          "cols": 8,
+          "rows": 3,
+          "fps": 12.0,
+          "bytes": 83774
+        },
+        "die": {
+          "file": "reanim/newspaper/die.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 37824
+        },
+        "special": {
+          "file": "reanim/newspaper/special.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 93266
+        }
+      }
+    },
+    "dancing": {
+      "w": 100.0,
+      "h": 177.0,
+      "ax": -3.0,
+      "ay": 34.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "walk": {
+          "file": "reanim/dancing/walk.webp",
+          "frames": 11,
+          "cols": 8,
+          "rows": 2,
+          "fps": 12.0,
+          "bytes": 38160
+        },
+        "eat": {
+          "file": "reanim/dancing/eat.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 113132
+        },
+        "die": {
+          "file": "reanim/dancing/die.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 58180
+        },
+        "special": {
+          "file": "reanim/dancing/special.webp",
+          "frames": 11,
+          "cols": 8,
+          "rows": 2,
+          "fps": 12.0,
+          "bytes": 38160
+        }
+      }
+    },
+    "backup": {
+      "w": 120.0,
+      "h": 192.0,
+      "ax": 14.0,
+      "ay": 49.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "walk": {
+          "file": "reanim/backup/walk.webp",
+          "frames": 22,
+          "cols": 8,
+          "rows": 3,
+          "fps": 12.0,
+          "bytes": 72906
+        },
+        "eat": {
+          "file": "reanim/backup/eat.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 107498
+        },
+        "die": {
+          "file": "reanim/backup/die.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 57900
+        },
+        "special": {
+          "file": "reanim/backup/special.webp",
+          "frames": 22,
+          "cols": 8,
+          "rows": 3,
+          "fps": 12.0,
+          "bytes": 72906
+        }
+      }
+    },
+    "snorkel": {
+      "w": 119.0,
+      "h": 193.0,
+      "ax": 5.0,
+      "ay": 22.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "walk": {
+          "file": "reanim/snorkel/walk.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 99624
+        },
+        "eat": {
+          "file": "reanim/snorkel/eat.webp",
+          "frames": 25,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 59504
+        },
+        "die": {
+          "file": "reanim/snorkel/die.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 35906
+        },
+        "special": {
+          "file": "reanim/snorkel/special.webp",
+          "frames": 7,
+          "cols": 7,
+          "rows": 1,
+          "fps": 12.0,
+          "bytes": 7160
+        }
+      }
+    },
+    "zamboni": {
+      "w": 318.0,
+      "h": 254.0,
+      "ax": 108.0,
+      "ay": 78.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "walk": {
+          "file": "reanim/zamboni/walk.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 101516
+        },
+        "eat": {
+          "file": "reanim/zamboni/eat.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 101516
+        },
+        "die": {
+          "file": "reanim/zamboni/die.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 101516
+        },
+        "special": {
+          "file": "reanim/zamboni/special.webp",
+          "frames": 16,
+          "cols": 8,
+          "rows": 2,
+          "fps": 12.0,
+          "bytes": 98098
+        }
+      }
+    },
+    "bobsled": {
+      "w": 103.0,
+      "h": 161.0,
+      "ax": 16.0,
+      "ay": 10.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "walk": {
+          "file": "reanim/bobsled/walk.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 83388
+        },
+        "eat": {
+          "file": "reanim/bobsled/eat.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 73370
+        },
+        "die": {
+          "file": "reanim/bobsled/die.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 31976
+        },
+        "special": {
+          "file": "reanim/bobsled/special.webp",
+          "frames": 24,
+          "cols": 8,
+          "rows": 3,
+          "fps": 12.0,
+          "bytes": 40082
+        }
+      }
+    },
+    "dolphinrider": {
+      "w": 103.0,
+      "h": 154.0,
+      "ax": 15.0,
+      "ay": 3.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "walk": {
+          "file": "reanim/dolphinrider/walk.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 88318
+        },
+        "eat": {
+          "file": "reanim/dolphinrider/eat.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 56234
+        },
+        "die": {
+          "file": "reanim/dolphinrider/die.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 30428
+        },
+        "special": {
+          "file": "reanim/dolphinrider/special.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 56822
+        }
+      }
+    },
+    "jackbox": {
+      "w": 122.0,
+      "h": 163.0,
+      "ax": 19.0,
+      "ay": 22.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "walk": {
+          "file": "reanim/jackbox/walk.webp",
+          "frames": 19,
+          "cols": 8,
+          "rows": 3,
+          "fps": 12.0,
+          "bytes": 91300
+        },
+        "eat": {
+          "file": "reanim/jackbox/eat.webp",
+          "frames": 15,
+          "cols": 8,
+          "rows": 2,
+          "fps": 12.0,
+          "bytes": 72170
+        },
+        "die": {
+          "file": "reanim/jackbox/die.webp",
+          "frames": 23,
+          "cols": 8,
+          "rows": 3,
+          "fps": 12.0,
+          "bytes": 39214
+        },
+        "special": {
+          "file": "reanim/jackbox/special.webp",
+          "frames": 16,
+          "cols": 8,
+          "rows": 2,
+          "fps": 12.0,
+          "bytes": 84482
+        }
+      }
+    },
+    "balloon": {
+      "w": 90.0,
+      "h": 134.0,
+      "ax": 5.0,
+      "ay": -10.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "walk": {
+          "file": "reanim/balloon/walk.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 72706
+        },
+        "eat": {
+          "file": "reanim/balloon/eat.webp",
+          "frames": 25,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 64196
+        },
+        "die": {
+          "file": "reanim/balloon/die.webp",
+          "frames": 28,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 21014
+        },
+        "special": {
+          "file": "reanim/balloon/special.webp",
+          "frames": 28,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 68782
+        }
+      }
+    },
+    "digger": {
+      "w": 146.0,
+      "h": 177.0,
+      "ax": 41.0,
+      "ay": 30.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "walk": {
+          "file": "reanim/digger/walk.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 138636
+        },
+        "eat": {
+          "file": "reanim/digger/eat.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 139000
+        },
+        "die": {
+          "file": "reanim/digger/die.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 60406
+        },
+        "special": {
+          "file": "reanim/digger/special.webp",
+          "frames": 18,
+          "cols": 8,
+          "rows": 3,
+          "fps": 12.0,
+          "bytes": 25900
+        }
+      }
+    },
+    "pogo": {
+      "w": 101.0,
+      "h": 155.0,
+      "ax": 9.0,
+      "ay": 17.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "walk": {
+          "file": "reanim/pogo/walk.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 100468
+        },
+        "eat": {
+          "file": "reanim/pogo/eat.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 81324
+        },
+        "die": {
+          "file": "reanim/pogo/die.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 40026
+        },
+        "special": {
+          "file": "reanim/pogo/special.webp",
+          "frames": 11,
+          "cols": 8,
+          "rows": 2,
+          "fps": 12.0,
+          "bytes": 33126
+        }
+      }
+    },
+    "yeti": {
+      "w": 152.0,
+      "h": 197.0,
+      "ax": 47.0,
+      "ay": 36.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "walk": {
+          "file": "reanim/yeti/walk.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 137502
+        },
+        "eat": {
+          "file": "reanim/yeti/eat.webp",
+          "frames": 29,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 151578
+        },
+        "die": {
+          "file": "reanim/yeti/die.webp",
+          "frames": 27,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 70470
+        },
+        "special": {
+          "file": "reanim/yeti/special.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 126786
+        }
+      }
+    },
+    "bungee": {
+      "w": 170.0,
+      "h": 147.0,
+      "ax": 45.0,
+      "ay": 18.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "walk": {
+          "file": "reanim/bungee/walk.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 92488
+        },
+        "eat": {
+          "file": "reanim/bungee/eat.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 92488
+        },
+        "die": {
+          "file": "reanim/bungee/die.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 92488
+        },
+        "special": {
+          "file": "reanim/bungee/special.webp",
+          "frames": 15,
+          "cols": 8,
+          "rows": 2,
+          "fps": 12.0,
+          "bytes": 44862
+        }
+      }
+    },
+    "catapult": {
+      "w": 203.0,
+      "h": 164.0,
+      "ax": 19.0,
+      "ay": 12.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "walk": {
+          "file": "reanim/catapult/walk.webp",
+          "frames": 13,
+          "cols": 8,
+          "rows": 2,
+          "fps": 12.0,
+          "bytes": 64152
+        },
+        "eat": {
+          "file": "reanim/catapult/eat.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 159708
+        },
+        "die": {
+          "file": "reanim/catapult/die.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 159708
+        },
+        "special": {
+          "file": "reanim/catapult/special.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 142566
+        }
+      }
+    },
+    "gargantuar": {
+      "w": 232.0,
+      "h": 263.0,
+      "ax": 78.0,
+      "ay": 77.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "walk": {
+          "file": "reanim/gargantuar/walk.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 231372
+        },
+        "eat": {
+          "file": "reanim/gargantuar/eat.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 212308
+        },
+        "die": {
+          "file": "reanim/gargantuar/die.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 195326
+        },
+        "special": {
+          "file": "reanim/gargantuar/special.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 184558
+        }
+      }
+    },
+    "imp": {
+      "w": 118.0,
+      "h": 160.0,
+      "ax": -10.0,
+      "ay": 20.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "walk": {
+          "file": "reanim/imp/walk.webp",
+          "frames": 30,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 44088
+        },
+        "eat": {
+          "file": "reanim/imp/eat.webp",
+          "frames": 27,
+          "cols": 8,
+          "rows": 4,
+          "fps": 12.0,
+          "bytes": 51292
+        },
+        "die": {
+          "file": "reanim/imp/die.webp",
+          "frames": 22,
+          "cols": 8,
+          "rows": 3,
+          "fps": 12.0,
+          "bytes": 20998
+        },
+        "special": {
+          "file": "reanim/imp/special.webp",
+          "frames": 16,
+          "cols": 8,
+          "rows": 2,
+          "fps": 12.0,
+          "bytes": 12724
+        }
+      }
+    },
+    "boss": {
+      "w": 290.0,
+      "h": 420.0,
+      "ax": 145.0,
+      "ay": 420.0,
+      "fps": 12,
+      "scale": 1.0,
+      "clips": {
+        "idle": {
+          "file": "reanim/boss/idle.webp",
+          "frames": 12,
+          "cols": 12,
+          "rows": 1,
+          "fps": 12.0,
+          "bytes": 154578
+        }
+      }
+    }
+  }
+}

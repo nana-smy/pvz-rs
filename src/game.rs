@@ -1920,7 +1920,7 @@ impl Game {
                     if s.state != SunState::Collect {
                         let dx = s.x - x;
                         let dy = s.y - y;
-                        if dx * dx + dy * dy < 40.0 * 40.0 {
+                        if dx * dx + dy * dy < 56.0 * 56.0 {
                             self.suns[i].state = SunState::Collect;
                             got = true;
                             

@@ -597,24 +597,57 @@ fn draw_potato_mine(p: &P, pl: &Plant, time: f32, h: f32) {
 }
 
 fn art_of(kind: PlantKind) -> Option<Art> {
-    match kind {
-        PlantKind::Sunflower => Some(Art::Sunflower),
-        PlantKind::Peashooter => Some(Art::Peashooter),
-        PlantKind::SnowPea => Some(Art::SnowPea),
-        PlantKind::Repeater => Some(Art::Repeater),
-        PlantKind::WallNut => Some(Art::Wallnut),
-        PlantKind::Cherry => Some(Art::Cherry),
-        PlantKind::PotatoMine => Some(Art::PotatoMine),
-        PlantKind::Jalapeno => Some(Art::Jalapeno),
-        PlantKind::Threepeater => Some(Art::Threepeater),
-        PlantKind::Squash => Some(Art::Squash),
-        PlantKind::Cabbage => Some(Art::Cabbage),
-        PlantKind::Starfruit => Some(Art::Starfruit),
-        PlantKind::Garlic => Some(Art::Garlic),
-        PlantKind::Spikeweed => Some(Art::Spikeweed),
-        PlantKind::LilyPad => Some(Art::LilyPad),
-        PlantKind::FlowerPot => Some(Art::FlowerPot),
-    }
+    Some(match kind {
+        PlantKind::Sunflower => Art::Sunflower,
+        PlantKind::Peashooter => Art::Peashooter,
+        PlantKind::SnowPea => Art::SnowPea,
+        PlantKind::Repeater => Art::Repeater,
+        PlantKind::WallNut => Art::Wallnut,
+        PlantKind::Cherry => Art::Cherry,
+        PlantKind::PotatoMine => Art::PotatoMine,
+        PlantKind::Jalapeno => Art::Jalapeno,
+        PlantKind::Threepeater => Art::Threepeater,
+        PlantKind::Squash => Art::Squash,
+        PlantKind::Cabbage => Art::Cabbage,
+        PlantKind::Starfruit => Art::Starfruit,
+        PlantKind::Garlic => Art::Garlic,
+        PlantKind::Spikeweed => Art::Spikeweed,
+        PlantKind::LilyPad => Art::LilyPad,
+        PlantKind::FlowerPot => Art::FlowerPot,
+        PlantKind::Chomper => Art::Chomper,
+        PlantKind::PuffShroom => Art::PuffShroom,
+        PlantKind::SunShroom => Art::SunShroom,
+        PlantKind::FumeShroom => Art::FumeShroom,
+        PlantKind::GraveBuster => Art::GraveBuster,
+        PlantKind::HypnoShroom => Art::HypnoShroom,
+        PlantKind::ScaredyShroom => Art::ScaredyShroom,
+        PlantKind::IceShroom => Art::IceShroom,
+        PlantKind::DoomShroom => Art::DoomShroom,
+        PlantKind::TangleKelp => Art::TangleKelp,
+        PlantKind::Torchwood => Art::Torchwood,
+        PlantKind::TallNut => Art::TallNut,
+        PlantKind::SeaShroom => Art::SeaShroom,
+        PlantKind::Plantern => Art::Plantern,
+        PlantKind::Cactus => Art::Cactus,
+        PlantKind::Blover => Art::Blover,
+        PlantKind::SplitPea => Art::SplitPea,
+        PlantKind::Pumpkin => Art::Pumpkin,
+        PlantKind::MagnetShroom => Art::MagnetShroom,
+        PlantKind::KernelPult => Art::KernelPult,
+        PlantKind::CoffeeBean => Art::CoffeeBean,
+        PlantKind::UmbrellaLeaf => Art::UmbrellaLeaf,
+        PlantKind::Marigold => Art::Marigold,
+        PlantKind::MelonPult => Art::MelonPult,
+        PlantKind::GatlingPea => Art::GatlingPea,
+        PlantKind::TwinSunflower => Art::TwinSunflower,
+        PlantKind::GloomShroom => Art::GloomShroom,
+        PlantKind::Cattail => Art::Cattail,
+        PlantKind::WinterMelon => Art::WinterMelon,
+        PlantKind::GoldMagnet => Art::GoldMagnet,
+        PlantKind::Spikerock => Art::Spikerock,
+        PlantKind::CobCannon => Art::CobCannon,
+        PlantKind::Imitater => Art::Imitater,
+    })
 }
 
 fn draw_plant_kind(p: &P, kind: PlantKind, cx: f32, base: f32, t: f32, hp: f32, fuse: f32, anim: f32) {
@@ -706,6 +739,7 @@ fn draw_plant_kind(p: &P, kind: PlantKind, cx: f32, base: f32, t: f32, hp: f32, 
                 p.poly(&[(cx + dx, base - 8.0), (cx + dx + 5.0, base - 8.0), (cx + dx + 2.0, base - 30.0)], "#b9d48a");
             }
         }
+        _ => {}
     }
 }
 
@@ -727,9 +761,41 @@ fn art_height(art: Art) -> f32 {
         Art::Spikeweed => 42.0,
         Art::LilyPad => 72.0,
         Art::FlowerPot => 92.0,
+        Art::Chomper => 104.0,
+        Art::PuffShroom => 84.0,
+        Art::SunShroom => 88.0,
+        Art::FumeShroom => 96.0,
+        Art::GraveBuster => 86.0,
+        Art::HypnoShroom => 92.0,
+        Art::ScaredyShroom => 92.0,
+        Art::IceShroom => 86.0,
+        Art::DoomShroom => 112.0,
+        Art::TangleKelp => 80.0,
+        Art::Torchwood => 104.0,
+        Art::TallNut => 132.0,
+        Art::SeaShroom => 76.0,
+        Art::Plantern => 126.0,
+        Art::Cactus => 112.0,
+        Art::Blover => 96.0,
+        Art::SplitPea => 110.0,
+        Art::Pumpkin => 112.0,
+        Art::MagnetShroom => 96.0,
+        Art::KernelPult => 106.0,
+        Art::CoffeeBean => 84.0,
+        Art::UmbrellaLeaf => 118.0,
+        Art::Marigold => 88.0,
+        Art::MelonPult => 112.0,
+        Art::GatlingPea => 114.0,
+        Art::TwinSunflower => 120.0,
+        Art::GloomShroom => 100.0,
+        Art::Cattail => 116.0,
+        Art::WinterMelon => 116.0,
+        Art::GoldMagnet => 104.0,
+        Art::Spikerock => 70.0,
+        Art::CobCannon => 114.0,
+        Art::Imitater => 76.0,
     }
 }
-
 // 原版 reanim 烘焙帧：身体、头、叶片、嘴分别按各自的骨骼变换合成。
 // 射击时用 anim_shooting，嘴部开合和头部后坐都来自原版轨道，而不是整张图平移。
 fn draw_anim_plant(p: &P, kind: PlantKind, art: Art, cx: f32, base: f32, t: f32, hp: f32, fuse: f32, anim: f32) -> bool {
@@ -1658,13 +1724,13 @@ fn draw_chooser(p: &P, g: &Game) {
         p.rr(x, y, w, h, 11.0, if selected { "#fff0b0" } else if hover { "#f4e9cb" } else { "#e9dcb6" });
         p.rr_s(x, y, w, h, 11.0, if selected { 3.0 } else { 1.8 }, if selected { "#ffd34a" } else { "#977443" });
         p.save();
-        p.c.translate((x + w * 0.5) as f64, (y + h - 18.0) as f64);
-        p.c.scale(0.50, 0.50);
+        p.c.translate((x + w * 0.5) as f64, (y + h - 9.0) as f64);
+        p.c.scale(0.34, 0.34);
         draw_plant_kind(p, *k, 0.0, 0.0, g.time + i as f32 * 0.3, 1.0, 1.0, 0.0);
         p.restore();
-        p.text(k.name(), x + w * 0.5, y + h - 5.0, 11.0, "#4b3211", "center", false);
-        p.rr(x + w - 34.0, y + 4.0, 30.0, 16.0, 8.0, rgba(80, 54, 18, 0.16));
-        p.text(&format!("{}", k.cost()), x + w - 19.0, y + 13.0, 11.0, "#4b3211", "center", true);
+        p.text(k.name(), x + w * 0.5, y + h - 2.0, 9.5, "#4b3211", "center", false);
+        p.rr(x + w - 30.0, y + 3.0, 27.0, 14.0, 7.0, rgba(80, 54, 18, 0.16));
+        p.text(&format!("{}", k.cost()), x + w - 16.5, y + 12.0, 9.5, "#4b3211", "center", true);
         if selected {
             let n = g.seeds.iter().position(|x| *x == *k).unwrap_or(0) + 1;
             p.circle(x + 13.0, y + 13.0, 10.0, "#ffd34a");

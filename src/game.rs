@@ -142,7 +142,7 @@ pub struct Game {
     pub mouse: (f32, f32),
     pub sun: i32,
     pub sun_pop: f32,
-    pub cooldowns: [f32; 16],
+    pub cooldowns: [f32; 49],
     pub seeds: Vec<PlantKind>,
     pub selected: Option<PlantKind>,
     pub shovel: bool,
@@ -170,6 +170,7 @@ pub struct Game {
     pub level: usize,
     pub map_page: usize,
     pub cfg: LevelCfg,
+    pub last_planted: Option<PlantKind>,
 }
 
 fn part(
@@ -214,7 +215,7 @@ impl Game {
             mouse: (0.0, 0.0),
             sun: 150,
             sun_pop: 0.0,
-            cooldowns: [0.0; 16],
+            cooldowns: [0.0; 49],
             seeds: Vec::new(),
             selected: None,
             shovel: false,
@@ -242,6 +243,7 @@ impl Game {
             level: 0,
             map_page: 0,
             cfg: level_cfg(0),
+            last_planted: None,
         }
     }
 
@@ -285,7 +287,8 @@ impl Game {
         self.elapsed = 0.0;
         self.sun = self.cfg.sun;
         self.sun_pop = 0.0;
-        self.cooldowns = [0.0; 16];
+        self.cooldowns = [0.0; 49];
+        self.last_planted = None;
         self.selected = None;
         self.shovel = false;
         self.plants.clear();
@@ -432,6 +435,13 @@ impl Game {
         let mut squash_hits: Vec<(f32, usize)> = Vec::new();
         let mut mine_hits: Vec<(f32, usize)> = Vec::new();
         let mut spike_ticks: Vec<(f32, usize)> = Vec::new();
+        let mut spike_hits: Vec<(f32, usize)> = Vec::new();
+        let mut freeze_all = false;
+        let mut doom_hits: Vec<(f32, usize)> = Vec::new();
+        let mut chomp_hits: Vec<(f32, usize)> = Vec::new();
+        let mut gloom_hits: Vec<(f32, usize)> = Vec::new();
+        let mut blover_push = false;
+        let mut magnet_pull = false;
         let h = self.cell_h();
         let rows = self.rows();
         {
@@ -633,6 +643,238 @@ impl Game {
                             spike_ticks.push((cx, p.row));
                         }
                     }
+                    PlantKind::PuffShroom
+                    | PlantKind::FumeShroom
+                    | PlantKind::SeaShroom
+                    | PlantKind::Cactus => {
+                        p.timer -= dt;
+                        let range = if p.kind == PlantKind::FumeShroom { 260.0 } else { 420.0 };
+                        let has_target = zombies.iter().any(|z| {
+                            z.row == p.row && !z.dying && z.x > cx + 6.0 && z.x < cx + range
+                        });
+                        if has_target && p.timer <= 0.0 {
+                            p.timer = if p.kind == PlantKind::FumeShroom { 1.2 } else { 1.5 };
+                            p.anim = 0.18;
+                            peas.push(Pea {
+                                x: cx + 30.0,
+                                y: gy - 48.0,
+                                row: p.row,
+                                dmg: if p.kind == PlantKind::FumeShroom { 26.0 } else { 18.0 },
+                                slow: false,
+                                vx: if p.kind == PlantKind::FumeShroom { 280.0 } else { 320.0 },
+                                t: 0.0,
+                                pk: 0,
+                            });
+                            made_sounds.0 = true;
+                        }
+                    }
+                    PlantKind::ScaredyShroom => {
+                        p.timer -= dt;
+                        let nearby = zombies.iter().any(|z| {
+                            z.row == p.row && !z.dying && (z.x - cx).abs() < 150.0
+                        });
+                        let target = zombies.iter().any(|z| {
+                            z.row == p.row && !z.dying && z.x > cx + 6.0 && z.x < W + 30.0
+                        });
+                        if !nearby && target && p.timer <= 0.0 {
+                            p.timer = 1.5;
+                            p.anim = 0.18;
+                            peas.push(Pea {
+                                x: cx + 28.0,
+                                y: gy - 50.0,
+                                row: p.row,
+                                dmg: 18.0,
+                                slow: false,
+                                vx: 320.0,
+                                t: 0.0,
+                                pk: 0,
+                            });
+                            made_sounds.0 = true;
+                        }
+                    }
+                    PlantKind::SplitPea => {
+                        p.timer -= dt;
+                        let forward = zombies.iter().any(|z| {
+                            z.row == p.row && !z.dying && z.x > cx + 6.0 && z.x < W + 30.0
+                        });
+                        let backward = zombies.iter().any(|z| {
+                            z.row == p.row && !z.dying && z.x < cx - 6.0
+                        });
+                        if (forward || backward) && p.timer <= 0.0 {
+                            p.timer = 1.5;
+                            p.anim = 0.18;
+                            if forward {
+                                peas.push(Pea { x: cx + 34.0, y: gy - 52.0, row: p.row, dmg: 20.0, slow: false, vx: 330.0, t: 0.0, pk: 0 });
+                            }
+                            if backward {
+                                peas.push(Pea { x: cx - 30.0, y: gy - 46.0, row: p.row, dmg: 20.0, slow: false, vx: -300.0, t: 0.0, pk: 0 });
+                            }
+                            made_sounds.0 = true;
+                        }
+                    }
+                    PlantKind::GatlingPea => {
+                        p.timer -= dt;
+                        let has_target = zombies.iter().any(|z| {
+                            z.row == p.row && !z.dying && z.x > cx + 6.0 && z.x < W + 30.0
+                        });
+                        if has_target && p.timer <= 0.0 {
+                            p.timer = 1.6;
+                            p.anim = 0.20;
+                            for k in 0..4 {
+                                peas.push(Pea {
+                                    x: cx + 34.0,
+                                    y: gy - 54.0 + k as f32 * 1.5,
+                                    row: p.row,
+                                    dmg: 20.0,
+                                    slow: false,
+                                    vx: 350.0,
+                                    t: -(k as f32) * 0.12,
+                                    pk: 0,
+                                });
+                            }
+                            made_sounds.0 = true;
+                        }
+                    }
+                    PlantKind::Cattail => {
+                        p.timer -= dt;
+                        let has_target = zombies.iter().any(|z| !z.dying && z.x < W + 30.0);
+                        if has_target && p.timer <= 0.0 {
+                            p.timer = 1.4;
+                            p.anim = 0.16;
+                            if let Some(z) = zombies.iter().filter(|z| !z.dying && z.x < W + 20.0).min_by(|a, b| (a.x - cx).abs().partial_cmp(&(b.x - cx).abs()).unwrap()) {
+                                let rr = z.row;
+                                peas.push(Pea { x: cx + 22.0, y: row_ground(rr, h) - 54.0, row: rr, dmg: 30.0, slow: false, vx: 380.0, t: 0.0, pk: 0 });
+                            }
+                            made_sounds.0 = true;
+                        }
+                    }
+                    PlantKind::KernelPult => {
+                        p.timer -= dt;
+                        let has_target = zombies.iter().any(|z| z.row == p.row && !z.dying && z.x > cx + 6.0 && z.x < W + 30.0);
+                        if has_target && p.timer <= 0.0 {
+                            p.timer = 3.0;
+                            p.anim = 0.20;
+                            peas.push(Pea { x: cx + 24.0, y: gy - 66.0, row: p.row, dmg: 40.0, slow: false, vx: 360.0, t: 9.0, pk: 2 });
+                            made_sounds.0 = true;
+                        }
+                    }
+                    PlantKind::MelonPult | PlantKind::WinterMelon => {
+                        p.timer -= dt;
+                        let has_target = zombies.iter().any(|z| z.row == p.row && !z.dying && z.x > cx + 6.0 && z.x < W + 30.0);
+                        if has_target && p.timer <= 0.0 {
+                            p.timer = 3.5;
+                            p.anim = 0.20;
+                            peas.push(Pea {
+                                x: cx + 24.0,
+                                y: gy - 70.0,
+                                row: p.row,
+                                dmg: if p.kind == PlantKind::WinterMelon { 65.0 } else { 90.0 },
+                                slow: p.kind == PlantKind::WinterMelon,
+                                vx: 340.0,
+                                t: 9.0,
+                                pk: 2,
+                            });
+                            made_sounds.0 = true;
+                        }
+                    }
+                    PlantKind::GloomShroom => {
+                        p.timer -= dt;
+                        if p.timer <= 0.0 {
+                            p.timer = 2.2;
+                            gloom_hits.push((cx, p.row));
+                        }
+                    }
+                    PlantKind::SunShroom => {
+                        p.timer -= dt;
+                        if p.timer <= 0.0 {
+                            p.timer = 22.0;
+                            sun_spawns.push((cx + 18.0, gy - 56.0));
+                        }
+                    }
+                    PlantKind::TwinSunflower => {
+                        p.timer -= dt;
+                        if p.timer <= 0.0 {
+                            p.timer = 25.0;
+                            sun_spawns.push((cx - 18.0, gy - 78.0));
+                            sun_spawns.push((cx + 26.0, gy - 82.0));
+                        }
+                    }
+                    PlantKind::Marigold | PlantKind::GoldMagnet => {
+                        p.timer -= dt;
+                        if p.timer <= 0.0 {
+                            p.timer = if p.kind == PlantKind::GoldMagnet { 12.0 } else { 18.0 };
+                            sun_spawns.push((cx + 18.0, gy - 64.0));
+                        }
+                    }
+                    PlantKind::Chomper => {
+                        p.timer -= dt;
+                        if p.timer <= 0.0 {
+                            let target = zombies.iter().any(|z| z.row == p.row && !z.dying && (z.x - cx).abs() < 96.0);
+                            if target {
+                                chomp_hits.push((cx, p.row));
+                                p.timer = 8.0;
+                                p.anim = 0.35;
+                            }
+                        }
+                    }
+                    PlantKind::IceShroom => {
+                        p.fuse -= dt;
+                        if p.fuse <= 0.0 {
+                            freeze_all = true;
+                            dead_plants.push(i);
+                        }
+                    }
+                    PlantKind::DoomShroom => {
+                        p.fuse -= dt;
+                        if p.fuse <= 0.0 {
+                            doom_hits.push((cx, p.row));
+                            dead_plants.push(i);
+                        }
+                    }
+                    PlantKind::TangleKelp => {
+                        p.fuse -= dt;
+                        if p.fuse <= 0.0 {
+                            chomp_hits.push((cx, p.row));
+                            dead_plants.push(i);
+                        }
+                    }
+                    PlantKind::Spikerock => {
+                        p.timer -= dt;
+                        if p.timer <= 0.0 {
+                            p.timer = 0.4;
+                            spike_hits.push((cx, p.row));
+                        }
+                    }
+                    PlantKind::MagnetShroom => {
+                        p.timer -= dt;
+                        if p.timer <= 0.0 && zombies.iter().any(|z| z.row == p.row && !z.dying && z.shield > 0.0) {
+                            p.timer = 7.0;
+                            magnet_pull = true;
+                        }
+                    }
+                    PlantKind::Blover => {
+                        p.timer -= dt;
+                        if p.timer <= 0.0 {
+                            p.timer = 9.0;
+                            blover_push = true;
+                        }
+                    }
+                    PlantKind::CobCannon => {
+                        p.timer -= dt;
+                        if p.timer <= 0.0 && zombies.iter().any(|z| !z.dying && z.x < W + 10.0) {
+                            p.timer = 12.0;
+                            doom_hits.push((cx + 180.0, p.row));
+                        }
+                    }
+                    PlantKind::GraveBuster
+                    | PlantKind::HypnoShroom
+                    | PlantKind::Torchwood
+                    | PlantKind::TallNut
+                    | PlantKind::Plantern
+                    | PlantKind::Pumpkin
+                    | PlantKind::CoffeeBean
+                    | PlantKind::UmbrellaLeaf
+                    | PlantKind::Imitater => {}
                     PlantKind::Garlic => {}
                     PlantKind::WallNut => {}
                 }
@@ -815,6 +1057,124 @@ impl Game {
             self.shake = 10.0;
             self.sfx.explode();
         }
+        if freeze_all {
+            for z in self.zombies.iter_mut() {
+                if !z.dying {
+                    z.slow = z.slow.max(10.0);
+                    z.flash = 1.0;
+                }
+            }
+            self.flash_screen = 0.45;
+            self.shake = 8.0;
+            self.sfx.explode();
+            for k in 0..40 {
+                self.particles.push(part(
+                    self.rng.f(0.0, W),
+                    self.rng.f(120.0, 620.0),
+                    self.rng.f(-20.0, 20.0),
+                    self.rng.f(-60.0, 20.0),
+                    0.9,
+                    self.rng.f(3.0, 8.0),
+                    (150, 230, 255),
+                    10.0,
+                    PKind::Dot,
+                ));
+            }
+        }
+        for (x, row) in doom_hits {
+            for z in self.zombies.iter_mut() {
+                if !z.dying && (z.x - x).abs() < 260.0 {
+                    hurt_zombie(z, 4000.0);
+                }
+            }
+            for k in 0..34 {
+                let a = k as f32 / 34.0 * std::f32::consts::TAU;
+                self.particles.push(part(
+                    x,
+                    row_ground(row, h) - 40.0,
+                    a.cos() * 220.0,
+                    a.sin() * 130.0 - 40.0,
+                    0.8,
+                    14.0,
+                    (255, 150, 45),
+                    20.0,
+                    PKind::Dot,
+                ));
+            }
+            self.particles.push(part(x, row_ground(row, h) - 30.0, 0.0, 0.0, 1.2, 120.0, (255, 220, 120), 0.0, PKind::Ring));
+            self.shake = 24.0;
+            self.flash_screen = 0.6;
+            self.sfx.explode();
+        }
+        for (x, row) in chomp_hits {
+            let mut ate = false;
+            for z in self.zombies.iter_mut() {
+                if !z.dying && z.row == row && (z.x - x).abs() < 110.0 && z.hp < 9000.0 {
+                    hurt_zombie(z, 9000.0);
+                    ate = true;
+                    break;
+                }
+            }
+            if ate {
+                for k in 0..10 {
+                    let a = -std::f32::consts::PI * 0.5 + k as f32 * 0.6;
+                    self.particles.push(part(
+                        x + 20.0,
+                        row_ground(row, h) - 70.0,
+                        a.cos() * 70.0,
+                        a.sin() * 70.0,
+                        0.45,
+                        7.0,
+                        (160, 235, 90),
+                        20.0,
+                        PKind::Leaf,
+                    ));
+                }
+                self.sfx.explode();
+            }
+        }
+        for (x, row) in gloom_hits {
+            for z in self.zombies.iter_mut() {
+                if !z.dying && (z.row as i32 - row as i32).abs() <= 1 && (z.x - x).abs() < 150.0 {
+                    hurt_zombie(z, 26.0);
+                }
+            }
+            for k in 0..12 {
+                let a = k as f32 / 12.0 * std::f32::consts::TAU;
+                self.particles.push(part(x, row_ground(row, h) - 55.0, a.cos() * 90.0, a.sin() * 60.0, 0.45, 8.0, (155, 85, 210), 10.0, PKind::Dot));
+            }
+        }
+        for (x, row) in spike_hits {
+            let mut hit = false;
+            for z in self.zombies.iter_mut() {
+                if z.row == row && !z.dying && (z.x - x).abs() < 48.0 {
+                    hurt_zombie(z, 45.0);
+                    hit = true;
+                }
+            }
+            if hit {
+                for k in 0..5 {
+                    self.particles.push(part(x + self.rng.f(-26.0, 26.0), row_ground(row, h) - 8.0, self.rng.f(-30.0, 30.0), -55.0, 0.32, 5.0, (215, 240, 170), 30.0, PKind::Dot));
+                }
+            }
+        }
+        if magnet_pull {
+            for z in self.zombies.iter_mut() {
+                if !z.dying && z.shield > 0.0 {
+                    z.shield = 0.0;
+                }
+            }
+        }
+        if blover_push {
+            for z in self.zombies.iter_mut() {
+                if !z.dying && z.x < W - 10.0 {
+                    z.x = (z.x + 90.0).min(W - 10.0);
+                }
+            }
+            for k in 0..20 {
+                self.particles.push(part(self.rng.f(200.0, W), self.rng.f(160.0, 640.0), 110.0, -20.0, 0.6, 6.0, (210, 245, 190), 5.0, PKind::Leaf));
+            }
+        }
         for i in dead_plants {
             if i < self.plants.len() {
                 self.plants.remove(i);
@@ -850,6 +1210,10 @@ impl Game {
     }
 
     fn update_peas(&mut self, dt: f32) {
+        let torch: Vec<(f32, usize)> = self.plants.iter()
+            .filter(|p| p.kind == PlantKind::Torchwood)
+            .map(|p| { let (cx, _) = cell_center(p.row, p.col, self.cell_h()); (cx, p.row) })
+            .collect();
         let peas = &mut self.peas;
         let zombies = &mut self.zombies;
         let particles = &mut self.particles;
@@ -863,6 +1227,11 @@ impl Game {
             }
             p.t += dt;
             p.x += p.vx * dt;
+            if p.pk == 0 && p.dmg < 40.0 {
+                if torch.iter().any(|(tx, tr)| *tr == p.row && (p.x - *tx).abs() < 24.0) {
+                    p.dmg = 40.0;
+                }
+            }
             if p.x > W + 20.0 || p.x < -30.0 {
                 peas.remove(i);
                 continue;
@@ -1527,7 +1896,11 @@ impl Game {
         }
     }
 
-    fn plant_at(&mut self, kind: PlantKind, row: usize, col: usize) {
+    fn plant_at(&mut self, mut kind: PlantKind, row: usize, col: usize) {
+        if kind == PlantKind::Imitater {
+            kind = self.last_planted.unwrap_or(PlantKind::Peashooter);
+        }
+        self.last_planted = Some(kind);
         let (cx, cy) = self.cell_center(row, col);
         self.plants.push(Plant {
             kind,
@@ -1538,9 +1911,28 @@ impl Game {
             t: 0.0,
             timer: match kind {
                 PlantKind::Sunflower => self.rng.f(3.0, 12.5),
-                PlantKind::Peashooter | PlantKind::SnowPea | PlantKind::Repeater => 0.25,
-                PlantKind::Cabbage | PlantKind::Starfruit => 0.25,
+                PlantKind::SunShroom => self.rng.f(2.0, 7.0),
+                PlantKind::TwinSunflower => 8.0,
+                PlantKind::Marigold | PlantKind::GoldMagnet => 8.0,
+                PlantKind::Peashooter
+                | PlantKind::SnowPea
+                | PlantKind::Repeater
+                | PlantKind::PuffShroom
+                | PlantKind::FumeShroom
+                | PlantKind::SeaShroom
+                | PlantKind::Cactus
+                | PlantKind::SplitPea
+                | PlantKind::GatlingPea
+                | PlantKind::Cattail
+                | PlantKind::ScaredyShroom => 0.25,
+                PlantKind::Cabbage | PlantKind::Starfruit | PlantKind::KernelPult | PlantKind::MelonPult | PlantKind::WinterMelon => 0.25,
+                PlantKind::GloomShroom => 1.2,
+                PlantKind::Chomper => 0.4,
+                PlantKind::MagnetShroom => 3.0,
+                PlantKind::Blover => 3.0,
+                PlantKind::CobCannon => 6.0,
                 PlantKind::Spikeweed => 0.45,
+                PlantKind::Spikerock => 0.4,
                 PlantKind::Threepeater => 0.4,
                 PlantKind::PotatoMine => 14.0,
                 PlantKind::Squash => -1.0,
@@ -1549,6 +1941,9 @@ impl Game {
             fuse: match kind {
                 PlantKind::Cherry => 1.15,
                 PlantKind::Jalapeno => 1.0,
+                PlantKind::IceShroom => 0.9,
+                PlantKind::DoomShroom => 1.2,
+                PlantKind::TangleKelp => 0.7,
                 _ => 0.0,
             },
             flash: 0.0,

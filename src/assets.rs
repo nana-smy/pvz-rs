@@ -15,9 +15,13 @@ pub enum Art {
     Jalapeno = 7,
     Threepeater = 8,
     Squash = 9,
+    Cabbage = 10,
+    Starfruit = 11,
+    Garlic = 12,
+    Spikeweed = 13,
 }
 
-pub const ALL: [Art; 10] = [
+pub const ALL: [Art; 14] = [
     Art::Sunflower,
     Art::Peashooter,
     Art::Repeater,
@@ -28,6 +32,10 @@ pub const ALL: [Art; 10] = [
     Art::Jalapeno,
     Art::Threepeater,
     Art::Squash,
+    Art::Cabbage,
+    Art::Starfruit,
+    Art::Garlic,
+    Art::Spikeweed,
 ];
 
 impl Art {
@@ -43,6 +51,10 @@ impl Art {
             Art::Jalapeno => "jalapeno",
             Art::Threepeater => "threepeater",
             Art::Squash => "squash",
+            Art::Cabbage => "cabbagepult",
+            Art::Starfruit => "starfruit",
+            Art::Garlic => "garlic",
+            Art::Spikeweed => "spikeweed",
         }
     }
 }
@@ -51,9 +63,10 @@ thread_local! {
     static IMGS: RefCell<Vec<Option<HtmlImageElement>>> = const { RefCell::new(Vec::new()) };
     static ZOMBIES: RefCell<Vec<Option<HtmlImageElement>>> = const { RefCell::new(Vec::new()) };
     static BGS: RefCell<Vec<Option<HtmlImageElement>>> = const { RefCell::new(Vec::new()) };
+    static PROJ: RefCell<Vec<Option<HtmlImageElement>>> = const { RefCell::new(Vec::new()) };
 }
 
-const Z_KEYS: [&str; 56] = [
+const Z_KEYS: [&str; 64] = [
     "z_normal_0",
     "z_normal_1",
     "z_normal_2",
@@ -110,8 +123,17 @@ const Z_KEYS: [&str; 56] = [
     "z_football_5",
     "z_football_6",
     "z_football_7",
+    "z_ladder_0",
+    "z_ladder_1",
+    "z_ladder_2",
+    "z_ladder_3",
+    "z_ladder_4",
+    "z_ladder_5",
+    "z_ladder_6",
+    "z_ladder_7",
 ];
 const BG_KEYS: [&str; 3] = ["bg_day", "bg_dusk", "bg_night"];
+const PROJ_KEYS: [&str; 2] = ["pea", "pea_ice"];
 
 fn get_img(obj: &JsValue, key: &str) -> Option<HtmlImageElement> {
     if let Ok(v) = js_sys::Reflect::get(obj, &key.into()) {
@@ -128,6 +150,7 @@ pub fn init() {
     let mut imgs: Vec<Option<HtmlImageElement>> = vec![None; ALL.len()];
     let mut zs: Vec<Option<HtmlImageElement>> = vec![None; Z_KEYS.len()];
     let mut bgs: Vec<Option<HtmlImageElement>> = vec![None; BG_KEYS.len()];
+    let mut ps: Vec<Option<HtmlImageElement>> = vec![None; PROJ_KEYS.len()];
     if let Some(window) = web_sys::window() {
         if let Ok(obj) = js_sys::Reflect::get(&window, &"__pvzAssets".into()) {
             if !obj.is_undefined() && !obj.is_null() {
@@ -140,12 +163,16 @@ pub fn init() {
                 for (i, k) in BG_KEYS.iter().enumerate() {
                     bgs[i] = get_img(&obj, k);
                 }
+                for (i, k) in PROJ_KEYS.iter().enumerate() {
+                    ps[i] = get_img(&obj, k);
+                }
             }
         }
     }
     IMGS.with(|m| *m.borrow_mut() = imgs);
     ZOMBIES.with(|m| *m.borrow_mut() = zs);
     BGS.with(|m| *m.borrow_mut() = bgs);
+    PROJ.with(|m| *m.borrow_mut() = ps);
 }
 
 pub fn ready() -> bool {
@@ -170,6 +197,23 @@ pub fn image(art: Art) -> Option<HtmlImageElement> {
     if let Some(img) = &got {
         IMGS.with(|m| {
             if let Some(slot) = m.borrow_mut().get_mut(art as usize) {
+                *slot = Some(img.clone());
+            }
+        });
+    }
+    got
+}
+
+pub fn projectile(kind: u8) -> Option<HtmlImageElement> {
+    let idx = (kind as usize).min(1);
+    let cached = PROJ.with(|m| m.borrow().get(idx).cloned().flatten());
+    if cached.is_some() {
+        return cached;
+    }
+    let got = live(PROJ_KEYS[idx]);
+    if let Some(img) = &got {
+        PROJ.with(|m| {
+            if let Some(slot) = m.borrow_mut().get_mut(idx) {
                 *slot = Some(img.clone());
             }
         });

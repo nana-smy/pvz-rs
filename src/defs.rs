@@ -62,10 +62,14 @@ pub enum PlantKind {
     Jalapeno,
     Threepeater,
     Squash,
+    Cabbage,
+    Starfruit,
+    Garlic,
+    Spikeweed,
 }
 
 impl PlantKind {
-    pub const ALL: [PlantKind; 10] = [
+    pub const ALL: [PlantKind; 14] = [
         PlantKind::Sunflower,
         PlantKind::Peashooter,
         PlantKind::WallNut,
@@ -76,6 +80,10 @@ impl PlantKind {
         PlantKind::Jalapeno,
         PlantKind::Threepeater,
         PlantKind::Squash,
+        PlantKind::Cabbage,
+        PlantKind::Starfruit,
+        PlantKind::Garlic,
+        PlantKind::Spikeweed,
     ];
 
     pub fn idx(self) -> usize {
@@ -90,6 +98,10 @@ impl PlantKind {
             PlantKind::Jalapeno => 7,
             PlantKind::Threepeater => 8,
             PlantKind::Squash => 9,
+            PlantKind::Cabbage => 10,
+            PlantKind::Starfruit => 11,
+            PlantKind::Garlic => 12,
+            PlantKind::Spikeweed => 13,
         }
     }
 
@@ -105,6 +117,10 @@ impl PlantKind {
             PlantKind::Jalapeno => 125,
             PlantKind::Threepeater => 325,
             PlantKind::Squash => 125,
+            PlantKind::Cabbage => 100,
+            PlantKind::Starfruit => 125,
+            PlantKind::Garlic => 50,
+            PlantKind::Spikeweed => 100,
         }
     }
 
@@ -120,6 +136,10 @@ impl PlantKind {
             PlantKind::Jalapeno => 30.0,
             PlantKind::Threepeater => 12.0,
             PlantKind::Squash => 20.0,
+            PlantKind::Cabbage => 7.5,
+            PlantKind::Starfruit => 5.0,
+            PlantKind::Garlic => 10.0,
+            PlantKind::Spikeweed => 7.5,
         }
     }
 
@@ -127,6 +147,7 @@ impl PlantKind {
         match self {
             PlantKind::WallNut => 3000.0,
             PlantKind::Cherry => 9999.0,
+            PlantKind::Garlic => 450.0,
             _ => 300.0,
         }
     }
@@ -143,6 +164,10 @@ impl PlantKind {
             PlantKind::Jalapeno => "火爆辣椒",
             PlantKind::Threepeater => "三线射手",
             PlantKind::Squash => "窝瓜",
+            PlantKind::Cabbage => "卷心菜投手",
+            PlantKind::Starfruit => "星星果",
+            PlantKind::Garlic => "大蒜",
+            PlantKind::Spikeweed => "地刺",
         }
     }
 
@@ -158,6 +183,10 @@ impl PlantKind {
             PlantKind::Jalapeno => "点燃后烧光整行僵尸",
             PlantKind::Threepeater => "同时向相邻三行发射豌豆",
             PlantKind::Squash => "压扁前方最近的僵尸",
+            PlantKind::Cabbage => "抛射卷心菜，越过铁门直接砸后排",
+            PlantKind::Starfruit => "向五个方向同时发射星星",
+            PlantKind::Garlic => "被咬后把僵尸引到相邻一行",
+            PlantKind::Spikeweed => "僵尸踩过持续受伤，不会被啃食",
         }
     }
 }
@@ -171,6 +200,7 @@ pub enum ZombieKind {
     PoleVault,
     ScreenDoor,
     Football,
+    Ladder,
 }
 
 impl ZombieKind {
@@ -183,6 +213,7 @@ impl ZombieKind {
             ZombieKind::PoleVault => 500.0,
             ZombieKind::ScreenDoor => 240.0,
             ZombieKind::Football => 1600.0,
+            ZombieKind::Ladder => 550.0,
         }
     }
 
@@ -195,6 +226,7 @@ impl ZombieKind {
             ZombieKind::PoleVault => 34.0,
             ZombieKind::ScreenDoor => 18.0,
             ZombieKind::Football => 32.0,
+            ZombieKind::Ladder => 18.0,
         }
     }
 
@@ -218,6 +250,9 @@ pub struct LevelCfg {
     pub gaps: &'static [f32],
     pub tint: (u8, u8, u8, f32),
     pub pool: &'static [ZombieKind],
+    pub plants: &'static [PlantKind],
+    pub slots: usize,
+    pub seed_hint: &'static str,
 }
 
 static GAPS_A: [f32; 7] = [23.0, 22.0, 21.0, 20.0, 20.0, 19.0, 18.0];
@@ -230,13 +265,54 @@ static POOL_B: [ZombieKind; 4] = [
     ZombieKind::Bucket,
     ZombieKind::ScreenDoor,
 ];
-static POOL_C: [ZombieKind; 6] = [
+static POOL_C: [ZombieKind; 7] = [
     ZombieKind::Basic,
     ZombieKind::Cone,
     ZombieKind::Bucket,
     ZombieKind::PoleVault,
     ZombieKind::Football,
     ZombieKind::ScreenDoor,
+    ZombieKind::Ladder,
+];
+
+static PLANTS_A: [PlantKind; 8] = [
+    PlantKind::Sunflower,
+    PlantKind::Peashooter,
+    PlantKind::WallNut,
+    PlantKind::Cherry,
+    PlantKind::PotatoMine,
+    PlantKind::SnowPea,
+    PlantKind::Cabbage,
+    PlantKind::Garlic,
+];
+static PLANTS_B: [PlantKind; 11] = [
+    PlantKind::Sunflower,
+    PlantKind::Peashooter,
+    PlantKind::WallNut,
+    PlantKind::Cherry,
+    PlantKind::PotatoMine,
+    PlantKind::SnowPea,
+    PlantKind::Cabbage,
+    PlantKind::Garlic,
+    PlantKind::Repeater,
+    PlantKind::Threepeater,
+    PlantKind::Spikeweed,
+];
+static PLANTS_C: [PlantKind; 14] = [
+    PlantKind::Sunflower,
+    PlantKind::Peashooter,
+    PlantKind::WallNut,
+    PlantKind::Cherry,
+    PlantKind::PotatoMine,
+    PlantKind::SnowPea,
+    PlantKind::Cabbage,
+    PlantKind::Garlic,
+    PlantKind::Repeater,
+    PlantKind::Threepeater,
+    PlantKind::Spikeweed,
+    PlantKind::Jalapeno,
+    PlantKind::Starfruit,
+    PlantKind::Squash,
 ];
 
 pub fn level_cfg(i: usize) -> LevelCfg {
@@ -244,38 +320,71 @@ pub fn level_cfg(i: usize) -> LevelCfg {
         1 => LevelCfg {
             name: "黄昏 · 前院",
             subtitle: "更多铁桶与铁门僵尸",
-            sun: 175,
+            sun: 75,
             waves: 10,
             first_wave: 22.0,
             gaps: &GAPS_B,
             tint: (0, 0, 0, 0.0),
             pool: &POOL_B,
+            plants: &PLANTS_B,
+            slots: 7,
+            seed_hint: "黄昏波次更密，优先带群攻和地刺",
         },
         2 => LevelCfg {
             name: "夜晚 · 前院",
             subtitle: "撑杆跳、橄榄球僵尸来袭",
-            sun: 150,
+            sun: 50,
             waves: 12,
             first_wave: 20.0,
             gaps: &GAPS_C,
             tint: (0, 0, 0, 0.0),
             pool: &POOL_C,
+            plants: &PLANTS_C,
+            slots: 8,
+            seed_hint: "夜晚没有天降阳光，必须带足向日葵",
         },
         _ => LevelCfg {
             name: "白天 · 前院",
             subtitle: "适应草坪与阳光节奏",
-            sun: 150,
+            sun: 50,
             waves: 8,
             first_wave: 24.0,
             gaps: &GAPS_A,
             tint: (0, 0, 0, 0.0),
             pool: &POOL_A,
+            plants: &PLANTS_A,
+            slots: 6,
+            seed_hint: "先选向日葵和豌豆，再补防御与清场",
         },
     }
 }
 
 pub fn level_rect(i: usize) -> (f32, f32, f32, f32) {
     (172.0 + i as f32 * 262.0, 466.0, 238.0, 62.0)
+}
+
+pub const CHOOSE_COLS: usize = 7;
+pub const CHOOSE_X: f32 = 196.0;
+pub const CHOOSE_Y: f32 = 262.0;
+pub const CHOOSE_W: f32 = 118.0;
+pub const CHOOSE_H: f32 = 104.0;
+pub const CHOOSE_GAP_X: f32 = 10.0;
+pub const CHOOSE_GAP_Y: f32 = 10.0;
+pub const CHOOSE_START: (f32, f32, f32, f32) = (470.0, 624.0, 340.0, 64.0);
+
+pub fn choose_rect(i: usize) -> (f32, f32, f32, f32) {
+    let col = i % CHOOSE_COLS;
+    let row = i / CHOOSE_COLS;
+    (
+        CHOOSE_X + col as f32 * (CHOOSE_W + CHOOSE_GAP_X),
+        CHOOSE_Y + row as f32 * (CHOOSE_H + CHOOSE_GAP_Y),
+        CHOOSE_W,
+        CHOOSE_H,
+    )
+}
+
+pub fn seed_slot_rect(i: usize) -> (f32, f32, f32, f32) {
+    (330.0 + i as f32 * 68.0, 180.0, 60.0, 64.0)
 }
 
 pub fn cell_center(row: usize, col: usize) -> (f32, f32) {

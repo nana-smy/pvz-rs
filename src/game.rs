@@ -4,6 +4,7 @@ use crate::sfx::Sfx;
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum State {
     Menu,
+    Choosing,
     Playing,
     Paused,
     Won,
@@ -60,6 +61,7 @@ pub struct Plant {
     pub fuse: f32,
     pub flash: f32,
     pub pop: f32,
+    pub anim: f32,
 }
 
 pub struct Zombie {
@@ -80,6 +82,7 @@ pub struct Zombie {
     pub hit_flash: f32,
     pub shield: f32,
     pub vaulted: bool,
+    pub diverted: bool,
 }
 
 pub struct Pea {
@@ -90,6 +93,7 @@ pub struct Pea {
     pub slow: bool,
     pub vx: f32,
     pub t: f32,
+    pub pk: u8,
 }
 
 #[derive(Clone)]
@@ -137,7 +141,8 @@ pub struct Game {
     pub mouse: (f32, f32),
     pub sun: i32,
     pub sun_pop: f32,
-    pub cooldowns: [f32; 10],
+    pub cooldowns: [f32; 14],
+    pub seeds: Vec<PlantKind>,
     pub selected: Option<PlantKind>,
     pub shovel: bool,
     pub plants: Vec<Plant>,
@@ -203,7 +208,8 @@ impl Game {
             mouse: (0.0, 0.0),
             sun: 150,
             sun_pop: 0.0,
-            cooldowns: [0.0; 10],
+            cooldowns: [0.0; 14],
+            seeds: Vec::new(),
             selected: None,
             shovel: false,
             plants: Vec::new(),
@@ -232,7 +238,39 @@ impl Game {
         }
     }
 
+    pub fn enter_choose(&mut self, level: usize) {
+        self.level = level;
+        self.cfg = level_cfg(level);
+        self.state = State::Choosing;
+        self.seeds.clear();
+        self.selected = None;
+        self.shovel = false;
+        self.banner = None;
+        self.toast = None;
+        self.sfx.click();
+        self.sfx.music(true);
+    }
+
+    pub fn toggle_seed(&mut self, kind: PlantKind) {
+        if let Some(pos) = self.seeds.iter().position(|k| *k == kind) {
+            self.seeds.remove(pos);
+            self.sfx.click();
+            return;
+        }
+        if self.seeds.len() >= self.cfg.slots {
+            self.toast = Some((format!("最多只能带 {} 种植物", self.cfg.slots), 1.4, true));
+            return;
+        }
+        self.seeds.push(kind);
+        self.sfx.click();
+    }
+
     pub fn start(&mut self) {
+        if self.seeds.is_empty() {
+            for k in self.cfg.plants.iter().take(self.cfg.slots) {
+                self.seeds.push(*k);
+            }
+        }
         self.sfx.click();
         self.sfx.music(true);
         self.state = State::Playing;
@@ -240,7 +278,7 @@ impl Game {
         self.elapsed = 0.0;
         self.sun = self.cfg.sun;
         self.sun_pop = 0.0;
-        self.cooldowns = [0.0; 10];
+        self.cooldowns = [0.0; 14];
         self.selected = None;
         self.shovel = false;
         self.plants.clear();
@@ -318,7 +356,7 @@ impl Game {
 
     fn update_suns(&mut self, dt: f32) {
         self.sun_timer -= dt;
-        if self.sun_timer <= 0.0 {
+        if self.sun_timer <= 0.0 && self.level != 2 {
             self.sun_timer = self.rng.f(7.5, 11.0);
             let x = self.rng.f(GRID_X + 30.0, GRID_X + 9.0 * CELL_W - 30.0);
             let ty = self.rng.f(GRID_Y + 70.0, LAWN_BOTTOM - 40.0);
@@ -386,6 +424,7 @@ impl Game {
         let mut row_fires: Vec<usize> = Vec::new();
         let mut squash_hits: Vec<(f32, usize)> = Vec::new();
         let mut mine_hits: Vec<(f32, usize)> = Vec::new();
+        let mut spike_ticks: Vec<(f32, usize)> = Vec::new();
         {
             let plants = &mut self.plants;
             let zombies = &self.zombies;
@@ -427,6 +466,7 @@ impl Game {
                                     slow: false,
                                     vx: 430.0,
                                     t: 0.6,
+                                    pk: 0,
                                 });
                             }
                             made_sounds.0 = true;
@@ -449,6 +489,7 @@ impl Game {
                                 slow: p.kind == PlantKind::SnowPea,
                                 vx: 430.0,
                                 t: 0.0,
+                                pk: if p.kind == PlantKind::SnowPea { 1 } else { 0 },
                             });
                             if p.kind == PlantKind::Repeater {
                                 peas.push(Pea {
@@ -459,6 +500,7 @@ impl Game {
                                     slow: false,
                                     vx: 430.0,
                                     t: -0.14,
+                                    pk: 0,
                                 });
                             }
                             if p.kind == PlantKind::SnowPea {
@@ -521,6 +563,67 @@ impl Game {
                             }
                         }
                     }
+                    PlantKind::Cabbage => {
+                        p.timer -= dt;
+                        let has_target = zombies
+                            .iter()
+                            .any(|z| z.row == p.row && !z.dying && z.x > cx + 6.0 && z.x < W + 30.0);
+                        if has_target && p.timer <= 0.0 {
+                            p.timer = 3.0;
+                            p.anim = 0.20;
+                            peas.push(Pea {
+                                x: cx + 24.0,
+                                y: gy - 58.0,
+                                row: p.row,
+                                dmg: 40.0,
+                                slow: false,
+                                vx: 360.0,
+                                t: 9.0,
+                                pk: 2,
+                            });
+                            made_sounds.0 = true;
+                        }
+                    }
+                    PlantKind::Starfruit => {
+                        p.timer -= dt;
+                        let has_target = zombies.iter().any(|z| !z.dying && z.x < W + 30.0);
+                        if has_target && p.timer <= 0.0 {
+                            p.timer = 2.4;
+                            p.anim = 0.16;
+                            for dr in -1i32..=1 {
+                                let r = (p.row as i32 + dr).clamp(0, ROWS as i32 - 1) as usize;
+                                peas.push(Pea {
+                                    x: cx,
+                                    y: row_ground(r) - 48.0,
+                                    row: r,
+                                    dmg: 15.0,
+                                    slow: false,
+                                    vx: 380.0,
+                                    t: 9.0,
+                                    pk: 3,
+                                });
+                            }
+                            peas.push(Pea {
+                                x: cx,
+                                y: gy - 48.0,
+                                row: p.row,
+                                dmg: 15.0,
+                                slow: false,
+                                vx: -300.0,
+                                t: 9.0,
+                                pk: 3,
+                            });
+                            made_sounds.0 = true;
+                        }
+                    }
+                    PlantKind::Spikeweed => {
+                        p.timer -= dt;
+                        if p.timer <= 0.0 {
+                            p.timer = 0.45;
+                            spike_ticks.push((cx, p.row));
+                        }
+                    }
+                    PlantKind::Garlic => {}
                     PlantKind::WallNut => {}
                 }
             }
@@ -634,6 +737,31 @@ impl Game {
             }
             self.sfx.explode();
         }
+        for (x, row) in spike_ticks {
+            let mut hit = false;
+            for z in self.zombies.iter_mut() {
+                if z.row == row && !z.dying && (z.x - x).abs() < 40.0 {
+                    hurt_zombie(z, 12.0);
+                    hit = true;
+                }
+            }
+            if hit {
+                for k in 0..4 {
+                    let a = self.rng.f(0.0, std::f32::consts::TAU);
+                    self.particles.push(part(
+                        x + self.rng.f(-28.0, 28.0),
+                        row_ground(row) - 6.0,
+                        a.cos() * 35.0,
+                        -40.0 + k as f32 * 8.0,
+                        0.28,
+                        4.0,
+                        (190, 230, 120),
+                        40.0,
+                        PKind::Dot,
+                    ));
+                }
+            }
+        }
         for (x, row) in squash_hits {
             for z in self.zombies.iter_mut() {
                 if z.row == row && !z.dying && (z.x - x).abs() < 90.0 {
@@ -691,7 +819,7 @@ impl Game {
             }
             p.t += dt;
             p.x += p.vx * dt;
-            if p.x > W + 20.0 {
+            if p.x > W + 20.0 || p.x < -30.0 {
                 peas.remove(i);
                 continue;
             }
@@ -701,8 +829,13 @@ impl Game {
                     continue;
                 }
                 if (p.x - z.x).abs() < 22.0 && p.x > z.x - 34.0 {
-                    hurt_zombie(z, p.dmg);
-                    z.flash = 1.0;
+                    if p.pk == 2 {
+                        // 抛射物越过铁门/梯子，直接打本体
+                        z.hp -= p.dmg;
+                        z.flash = 1.0;
+                    } else {
+                        hurt_zombie(z, p.dmg);
+                    }
                     if p.slow {
                         z.slow = z.slow.max(6.0);
                     }
@@ -767,7 +900,7 @@ impl Game {
             let mouth = z.x - 22.0;
             let mut target: Option<usize> = None;
             for (pi, p) in plants.iter().enumerate() {
-                if p.row == z.row && p.hp > 0.0 {
+                if p.row == z.row && p.hp > 0.0 && p.kind != PlantKind::Spikeweed {
                     let px = GRID_X + p.col as f32 * CELL_W + 12.0;
                     if mouth > px && mouth < px + CELL_W - 12.0 {
                         target = Some(pi);
@@ -776,6 +909,15 @@ impl Game {
                 }
             }
             if let Some(pi) = target {
+                if plants[pi].kind == PlantKind::Garlic && !z.diverted {
+                    z.diverted = true;
+                    let nr = if z.row + 1 < ROWS { z.row + 1 } else { z.row.saturating_sub(1) };
+                    z.row = nr;
+                    z.x += 24.0;
+                    z.eating = false;
+                    plants[pi].flash = 1.0;
+                    continue;
+                }
                 if z.kind == ZombieKind::PoleVault && !z.vaulted {
                     z.vaulted = true;
                     let px = GRID_X + plants[pi].col as f32 * CELL_W + 12.0;
@@ -907,14 +1049,28 @@ impl Game {
     }
 
     fn pick_kind(&mut self, w: u32) -> ZombieKind {
-        let pool = self.cfg.pool;
-        if w <= 2 || pool.is_empty() {
+        let full = self.cfg.pool;
+        if full.is_empty() {
+            return ZombieKind::Basic;
+        }
+        // 按波次逐段解锁，避免第一波就混进橄榄球/铁桶
+        let unlocked = if w <= 2 {
+            1
+        } else if w <= 4 {
+            2
+        } else if w <= 6 {
+            3
+        } else {
+            full.len()
+        };
+        let pool = &full[..unlocked.min(full.len())];
+        if pool.len() == 1 {
             return pool[0];
         }
         let r = self.rng.f(0.0, 1.0);
         if r < 0.42 {
             pool[0]
-        } else if r < 0.72 && pool.len() > 1 {
+        } else if r < 0.72 {
             pool[1]
         } else if pool.len() > 2 {
             pool[2 + self.rng.range(pool.len() - 2)]
@@ -1008,6 +1164,7 @@ impl Game {
                 hit_flash: 0.0,
                 shield: kind.shield(),
                 vaulted: false,
+                diverted: false,
             });
         }
     }
@@ -1056,10 +1213,38 @@ impl Game {
             State::Menu => {
                 for i in 0..LEVEL_COUNT {
                     if rect_contains(level_rect(i), x, y) {
-                        self.level = i;
-                        self.start();
+                        self.enter_choose(i);
                         return;
                     }
+                }
+            }
+            State::Choosing => {
+                if button == 2 || rect_contains((12.0, 12.0, 92.0, 40.0), x, y) {
+                    self.state = State::Menu;
+                    self.sfx.click();
+                    return;
+                }
+                for i in 0..self.cfg.plants.len() {
+                    if rect_contains(choose_rect(i), x, y) {
+                        let k = self.cfg.plants[i];
+                        self.toggle_seed(k);
+                        return;
+                    }
+                }
+                for i in 0..self.seeds.len() {
+                    if rect_contains(seed_slot_rect(i), x, y) {
+                        self.seeds.remove(i);
+                        self.sfx.click();
+                        return;
+                    }
+                }
+                if rect_contains(CHOOSE_START, x, y) {
+                    if self.seeds.is_empty() {
+                        self.toast = Some(("请先选择至少一种植物".into(), 1.4, true));
+                    } else {
+                        self.start();
+                    }
+                    return;
                 }
             }
             State::Playing => {
@@ -1104,12 +1289,12 @@ impl Game {
                     return;
                 }
                 // 卡片
-                for i in 0..PlantKind::ALL.len() {
+                for i in 0..self.seeds.len() {
                     if rect_contains(card_rect(i), x, y) {
-                        let k = PlantKind::ALL[i];
+                        let k = self.seeds[i];
                         if self.selected == Some(k) {
                             self.selected = None;
-                        } else if self.cooldowns[i] > 0.0 {
+                        } else if self.cooldowns[k.idx()] > 0.0 {
                             self.toast = Some(("冷却中…".into(), 1.2, true));
                         } else if self.sun < k.cost() {
                             self.toast = Some(("阳光不足".into(), 1.2, true));
@@ -1179,7 +1364,12 @@ impl Game {
             }
             State::Won | State::Lost => {
                 if rect_contains(AGAIN_BTN, x, y) {
-                    self.start();
+                    let next = if self.state == State::Won {
+                        (self.level + 1).min(LEVEL_COUNT - 1)
+                    } else {
+                        self.level
+                    };
+                    self.enter_choose(next);
                 }
             }
         }
@@ -1197,6 +1387,8 @@ impl Game {
             timer: match kind {
                 PlantKind::Sunflower => 5.5,
                 PlantKind::Peashooter | PlantKind::SnowPea | PlantKind::Repeater => 0.25,
+                PlantKind::Cabbage | PlantKind::Starfruit => 0.25,
+                PlantKind::Spikeweed => 0.45,
                 PlantKind::Threepeater => 0.4,
                 PlantKind::PotatoMine => 14.0,
                 PlantKind::Squash => -1.0,
@@ -1209,6 +1401,7 @@ impl Game {
             },
             flash: 0.0,
             pop: 0.0,
+            anim: 0.0,
         });
         self.sun -= kind.cost();
         self.cooldowns[kind.idx()] = kind.cooldown();
@@ -1255,7 +1448,11 @@ impl Game {
                 }
             }
             "Space" => {
-                if self.state == State::Playing {
+                if self.state == State::Choosing {
+                    if !self.seeds.is_empty() {
+                        self.start();
+                    }
+                } else if self.state == State::Playing {
                     self.state = State::Paused;
                     self.sfx.pause();
                     self.sfx.music(false);
@@ -1269,7 +1466,9 @@ impl Game {
             "Escape" => {
                 self.selected = None;
                 self.shovel = false;
-                if self.state == State::Playing {
+                if self.state == State::Choosing {
+                    self.state = State::Menu;
+                } else if self.state == State::Playing {
                     self.state = State::Paused;
                     self.sfx.pause();
                     self.sfx.music(false);

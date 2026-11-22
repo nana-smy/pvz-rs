@@ -174,6 +174,10 @@ pub fn render(g: &Game, ctx: &CanvasRenderingContext2d) {
         draw_menu(&p, g);
         return;
     }
+    if g.state == State::Choosing {
+        draw_chooser(&p, g);
+        return;
+    }
     if g.shake > 0.0 {
         p.save();
         let dx = (g.time * 83.0).sin() * g.shake * 0.55;
@@ -270,7 +274,7 @@ fn draw_scene(p: &P, g: &Game) {
             if let Some(k) = g.selected {
                 p.save();
                 p.alpha(0.42);
-                draw_plant_kind(p, k, x + CELL_W * 0.5, y + CELL_H - 10.0, g.time, 1.0, 1.0);
+                draw_plant_kind(p, k, x + CELL_W * 0.5, y + CELL_H - 10.0, g.time, 1.0, 1.0, 0.0);
                 p.restore();
                 p.alpha(1.0);
             } else if g.shovel {
@@ -303,13 +307,37 @@ fn draw_scene(p: &P, g: &Game) {
         if pea.t < 0.0 {
             continue;
         }
-        if pea.slow {
+        if pea.pk == 2 {
+            p.circle(pea.x, pea.y, 8.0, "#5f9e34");
+            p.circle(pea.x - 2.0, pea.y - 3.0, 3.0, "#a6d96b");
+            p.arcw(pea.x, pea.y, 9.0, 0.0, TAU, 1.2, "#3f7422");
+        } else if pea.pk == 3 {
+            for k in 0..5 {
+                let a = -PI as f32 * 0.5 + k as f32 * TAU / 5.0;
+                p.poly(
+                    &[
+                        (pea.x + a.cos() * 9.0, pea.y + a.sin() * 9.0),
+                        (pea.x + (a + 2.0).cos() * 4.0, pea.y + (a + 2.0).sin() * 4.0),
+                        (pea.x + (a - 2.0).cos() * 4.0, pea.y + (a - 2.0).sin() * 4.0),
+                    ],
+                    "#ffd23f",
+                );
+            }
+        } else if let Some(img) = assets::projectile(pea.pk) {
+            let _ = p.c.draw_image_with_html_image_element_and_dw_and_dh(
+                &img,
+                (pea.x - 11.0) as f64,
+                (pea.y - 11.0) as f64,
+                22.0,
+                22.0,
+            );
+        } else if pea.slow {
             p.circle(pea.x - 6.0, pea.y, 6.5, rgba(140, 220, 240, 0.35));
             p.circle(pea.x - 2.0, pea.y, 7.0, "#9fe6f5");
             p.circle(pea.x + 1.0, pea.y - 2.0, 2.4, "#e9ffff");
         } else {
             p.circle(pea.x, pea.y, 7.0, "#74c93c");
-            p.circle(pea.x - 2.0, pea.y - 2.4, 2.6, "#b6ec7a");
+            p.circle(pea.x - 2.0, pea.y - 2.0, 2.6, "#b6ec7a");
         }
     }
 
@@ -452,7 +480,7 @@ fn draw_plant(p: &P, pl: &Plant, time: f32) {
     p.c.translate(cx as f64, base as f64);
     p.c.scale(s as f64, s as f64);
     p.c.translate(-cx as f64, -base as f64);
-    draw_plant_kind(p, pl.kind, cx, base, time, ratio, pl.fuse);
+    draw_plant_kind(p, pl.kind, cx, base, time, ratio, pl.fuse, pl.anim);
     p.restore();
 }
 
@@ -468,13 +496,17 @@ fn art_of(kind: PlantKind) -> Option<Art> {
         PlantKind::Jalapeno => Some(Art::Jalapeno),
         PlantKind::Threepeater => Some(Art::Threepeater),
         PlantKind::Squash => Some(Art::Squash),
+        PlantKind::Cabbage => Some(Art::Cabbage),
+        PlantKind::Starfruit => Some(Art::Starfruit),
+        PlantKind::Garlic => Some(Art::Garlic),
+        PlantKind::Spikeweed => Some(Art::Spikeweed),
     }
 }
 
-fn draw_plant_kind(p: &P, kind: PlantKind, cx: f32, base: f32, t: f32, hp: f32, fuse: f32) {
+fn draw_plant_kind(p: &P, kind: PlantKind, cx: f32, base: f32, t: f32, hp: f32, fuse: f32, anim: f32) {
     if let Some(art) = art_of(kind) {
         if assets::ready() {
-            draw_art_plant(p, kind, art, cx, base, t, hp, fuse);
+            draw_art_plant(p, kind, art, cx, base, t, hp, fuse, anim);
             return;
         }
     }
@@ -520,10 +552,41 @@ fn draw_plant_kind(p: &P, kind: PlantKind, cx: f32, base: f32, t: f32, hp: f32, 
             p.arcw(0.0, -32.0, 10.0, 0.2 * PI as f32, 0.8 * PI as f32, 2.4, "#66701f");
             p.restore();
         }
+        PlantKind::Cabbage => {
+            p.circle(cx, base - 96.0, 22.0, "#6fae3d");
+            p.arcw(cx, base - 96.0, 18.0, 0.0, TAU, 3.0, "#9bd36a");
+            p.rect(cx - 3.0, base - 82.0, 6.0, 66.0, "#4b7d2a");
+        }
+        PlantKind::Starfruit => {
+            for k in 0..5 {
+                let a = -PI as f32 * 0.5 + k as f32 * TAU / 5.0;
+                p.poly(
+                    &[
+                        (cx + a.cos() * 40.0, base - 46.0 + a.sin() * 40.0),
+                        (cx + (a + 2.0).cos() * 18.0, base - 46.0 + (a + 2.0).sin() * 18.0),
+                        (cx + (a - 2.0).cos() * 18.0, base - 46.0 + (a - 2.0).sin() * 18.0),
+                    ],
+                    "#ffc93c",
+                );
+            }
+        }
+        PlantKind::Garlic => {
+            p.ell(cx, base - 34.0, 28.0, 32.0, "#eee6d0");
+            p.circle(cx - 9.0, base - 44.0, 4.0, "#7a6a59");
+            p.circle(cx + 9.0, base - 44.0, 4.0, "#7a6a59");
+            p.rect(cx - 2.0, base - 68.0, 4.0, 12.0, "#cfc5ac");
+        }
+        PlantKind::Spikeweed => {
+            p.ell(cx, base - 8.0, 34.0, 10.0, "#5a8f2e");
+            for k in 0..5 {
+                let dx = -24.0 + k as f32 * 12.0;
+                p.poly(&[(cx + dx, base - 8.0), (cx + dx + 5.0, base - 8.0), (cx + dx + 2.0, base - 30.0)], "#b9d48a");
+            }
+        }
     }
 }
 
-fn draw_art_plant(p: &P, kind: PlantKind, art: Art, cx: f32, base: f32, t: f32, hp: f32, fuse: f32) {
+fn draw_art_plant(p: &P, kind: PlantKind, art: Art, cx: f32, base: f32, t: f32, hp: f32, fuse: f32, anim: f32) {
     let Some(img) = assets::image(art) else { return };
     let ih = img.height() as f32;
     let iw = img.width() as f32;
@@ -541,10 +604,19 @@ fn draw_art_plant(p: &P, kind: PlantKind, art: Art, cx: f32, base: f32, t: f32, 
         Art::Jalapeno => 94.0,
         Art::Threepeater => 98.0,
         Art::Squash => 98.0,
+        Art::Cabbage => 104.0,
+        Art::Starfruit => 86.0,
+        Art::Garlic => 80.0,
+        Art::Spikeweed => 42.0,
     };
     let w = h * iw / ih;
     let bob = (t * 2.1).sin() * 1.6;
     let sway = (t * 1.25).sin() * 0.012;
+    let recoil = if matches!(kind, PlantKind::Peashooter | PlantKind::SnowPea | PlantKind::Repeater | PlantKind::Cabbage | PlantKind::Starfruit) {
+        (anim / 0.20).clamp(0.0, 1.0) * 6.0
+    } else {
+        0.0
+    };
     let pulse = if kind == PlantKind::Cherry && fuse < 0.55 {
         1.0 + (t * 16.0).sin().abs() * 0.10
     } else {
@@ -552,8 +624,8 @@ fn draw_art_plant(p: &P, kind: PlantKind, art: Art, cx: f32, base: f32, t: f32, 
     };
     p.save();
     let yoff = if art == Art::PotatoMine { 8.0 } else { 0.0 };
-    p.c.translate(cx as f64, (base + bob + yoff) as f64);
-    p.c.rotate(sway as f64);
+    p.c.translate((cx - recoil) as f64, (base + bob + yoff) as f64);
+    p.c.rotate((sway - recoil * 0.008) as f64);
     p.c.scale(pulse as f64, pulse as f64);
     let _ = p.c.draw_image_with_html_image_element_and_dw_and_dh(
         &img,
@@ -881,6 +953,14 @@ fn draw_zombie(p: &P, z: &Zombie, time: f32) {
             );
             p.circle(24.0, -150.0, 3.0, "#e9c46a");
         }
+        ZombieKind::Ladder => {
+            p.line(&[(-42.0, -8.0), (-28.0, -126.0)], 6.0, "#c8d0d3");
+            p.line(&[(-30.0, -8.0), (-16.0, -126.0)], 6.0, "#c8d0d3");
+            for k in 0..6 {
+                let y = -18.0 - k as f32 * 20.0;
+                p.line(&[(-40.0, y), (-18.0, y)], 3.0, "#aeb7ba");
+            }
+        }
         ZombieKind::PoleVault => {
             p.line(&[(26.0, -6.0), (26.0, -120.0)], 4.0, "#b98b4a");
             p.line(&[(-34.0, -58.0), (30.0, -58.0)], 2.0, "#7d5a2e");
@@ -1070,8 +1150,8 @@ fn draw_hud(p: &P, g: &Game) {
     p.restore();
     p.text(&format!("{}", g.sun), 122.0, 52.0, 26.0, "#4a3010", "right", true);
 
-    // 卡片
-    for i in 0..PlantKind::ALL.len() {
+    // 卡片：只画本关已选种子
+    for i in 0..g.seeds.len() {
         draw_card(p, g, i);
     }
     draw_shovel_card(p, g);
@@ -1159,7 +1239,7 @@ fn draw_hud(p: &P, g: &Game) {
 
     // 卡片悬停提示
     if let Some(i) = hovered_card(g) {
-        let k = PlantKind::ALL[i];
+        let k = g.seeds[i];
         let (cx, cy, _, _) = card_rect(i);
         let w = 240.0;
         let x = (cx + CARD_W * 0.5 - w * 0.5).clamp(8.0, W - w - 8.0);
@@ -1181,7 +1261,7 @@ fn draw_hud(p: &P, g: &Game) {
 }
 
 fn hovered_card(g: &Game) -> Option<usize> {
-    for i in 0..PlantKind::ALL.len() {
+    for i in 0..g.seeds.len() {
         if rect_contains(card_rect(i), g.mouse.0, g.mouse.1) {
             return Some(i);
         }
@@ -1190,10 +1270,10 @@ fn hovered_card(g: &Game) -> Option<usize> {
 }
 
 fn draw_card(p: &P, g: &Game, i: usize) {
-    let k = PlantKind::ALL[i];
+    let Some(&k) = g.seeds.get(i) else { return };
     let (x, y, w, h) = card_rect(i);
     let selected = g.selected == Some(k);
-    let cd = g.cooldowns[i];
+    let cd = g.cooldowns[k.idx()];
     let afford = g.sun >= k.cost();
     let hover = rect_contains((x, y, w, h), g.mouse.0, g.mouse.1);
 
@@ -1232,7 +1312,7 @@ fn draw_card(p: &P, g: &Game, i: usize) {
     }
     p.c.translate((x + w * 0.5) as f64, (y + 57.0) as f64);
     p.c.scale(0.34, 0.34);
-    draw_plant_kind(p, k, 0.0, 0.0, g.time, 1.0, 1.0);
+    draw_plant_kind(p, k, 0.0, 0.0, g.time, 1.0, 1.0, 0.0);
     p.restore();
     p.alpha(1.0);
 
@@ -1310,6 +1390,109 @@ fn time_str(sec: f32) -> String {
 
 // ================= 菜单与结算 =================
 
+fn draw_chooser(p: &P, g: &Game) {
+    // 草坪背景
+    p.rect(0.0, 0.0, W, H, "#315f1d");
+    for col in 0..COLS {
+        let c = if col % 2 == 0 { "#4c8a2c" } else { "#427d25" };
+        p.rect(GRID_X + col as f32 * CELL_W, 0.0, CELL_W, H, c);
+    }
+    p.rect(0.0, 0.0, GRID_X, H, "#203d14");
+    p.rect(GRID_X + COLS as f32 * CELL_W, 0.0, W, H, "#1c3511");
+    p.rect(0.0, 0.0, W, H, rgba(8, 22, 6, 0.58));
+
+    // 返回
+    let back = (12.0, 12.0, 92.0, 40.0);
+    let bh = rect_contains(back, g.mouse.0, g.mouse.1);
+    p.rr(back.0, back.1, back.2, back.3, 10.0, if bh { "#6f9a41".to_string() } else { rgba(20, 38, 12, 0.82) });
+    p.rr_s(back.0, back.1, back.2, back.3, 10.0, 1.5, rgba(220, 240, 180, 0.45));
+    p.text("‹ 返回", back.0 + 46.0, back.1 + 26.0, 17.0, "#edf7dc", "center", false);
+
+    p.text_out("选 择 种 子", W * 0.5, 54.0, 44.0, "#ffe14d", "#2a1804", "center", true);
+    p.text(
+        &format!("{} · {}", g.cfg.name, g.cfg.seed_hint),
+        W * 0.5,
+        88.0,
+        16.0,
+        "#dcefc4",
+        "center",
+        false,
+    );
+
+    // 已选槽位
+    p.text(
+        &format!("已带 {}/{}", g.seeds.len(), g.cfg.slots),
+        246.0,
+        214.0,
+        16.0,
+        if g.seeds.len() == g.cfg.slots { "#ffe08a" } else { "#cfe6b2" },
+        "left",
+        true,
+    );
+    for i in 0..g.cfg.slots {
+        let (x, y, w, h) = seed_slot_rect(i);
+        let filled = g.seeds.get(i).copied();
+        p.rr(x, y, w, h, 9.0, rgba(20, 40, 14, 0.72));
+        p.rr_s(x, y, w, h, 9.0, 1.5, if filled.is_some() { "#e9c46a".to_string() } else { rgba(210, 230, 180, 0.28) });
+        if let Some(k) = filled {
+            p.save();
+            p.c.translate((x + w * 0.5) as f64, (y + h - 5.0) as f64);
+            p.c.scale(0.34, 0.34);
+            draw_plant_kind(p, k, 0.0, 0.0, g.time, 1.0, 1.0, 0.0);
+            p.restore();
+            p.circle(x + w - 7.0, y + 8.0, 7.0, rgba(20, 30, 14, 0.72));
+            p.text("×", x + w - 7.0, y + 12.0, 11.0, "#ffd7c2", "center", true);
+        } else {
+            p.text(&format!("{}", i + 1), x + w * 0.5, y + h * 0.5 + 6.0, 16.0, rgba(215, 235, 190, 0.35), "center", false);
+        }
+    }
+
+    // 可选植物
+    for (i, k) in g.cfg.plants.iter().enumerate() {
+        let (x, y, w, h) = choose_rect(i);
+        let selected = g.seeds.contains(k);
+        let hover = rect_contains((x, y, w, h), g.mouse.0, g.mouse.1);
+        p.rr(x + 2.0, y + 3.0, w, h, 11.0, rgba(0, 0, 0, 0.3));
+        p.rr(x, y, w, h, 11.0, if selected { "#fff0b0" } else if hover { "#f4e9cb" } else { "#e9dcb6" });
+        p.rr_s(x, y, w, h, 11.0, if selected { 3.0 } else { 1.8 }, if selected { "#ffd34a" } else { "#977443" });
+        p.save();
+        p.c.translate((x + w * 0.5) as f64, (y + h - 18.0) as f64);
+        p.c.scale(0.50, 0.50);
+        draw_plant_kind(p, *k, 0.0, 0.0, g.time + i as f32 * 0.3, 1.0, 1.0, 0.0);
+        p.restore();
+        p.text(k.name(), x + w * 0.5, y + h - 5.0, 11.0, "#4b3211", "center", false);
+        p.rr(x + w - 34.0, y + 4.0, 30.0, 16.0, 8.0, rgba(80, 54, 18, 0.16));
+        p.text(&format!("{}", k.cost()), x + w - 19.0, y + 13.0, 11.0, "#4b3211", "center", true);
+        if selected {
+            let n = g.seeds.iter().position(|x| *x == *k).unwrap_or(0) + 1;
+            p.circle(x + 13.0, y + 13.0, 10.0, "#ffd34a");
+            p.text(&format!("{}", n), x + 13.0, y + 17.0, 12.0, "#3c2604", "center", true);
+        }
+    }
+
+    // 开始
+    let can = !g.seeds.is_empty();
+    let sh = rect_contains(CHOOSE_START, g.mouse.0, g.mouse.1);
+    p.rr(CHOOSE_START.0, CHOOSE_START.1 + 3.0, CHOOSE_START.2, CHOOSE_START.3, 14.0, rgba(0, 0, 0, 0.3));
+    p.rr(CHOOSE_START.0, CHOOSE_START.1, CHOOSE_START.2, CHOOSE_START.3, 14.0, if can { if sh { "#7ec24a" } else { "#63a838" } } else { "#4a5a3a" });
+    p.rr_s(CHOOSE_START.0, CHOOSE_START.1, CHOOSE_START.2, CHOOSE_START.3, 14.0, 3.0, if can { "#cdf39b" } else { "#6f7a63" });
+    p.text_out(
+        if can { "开 始 战 斗" } else { "请选择植物" },
+        W * 0.5,
+        CHOOSE_START.1 + 39.0,
+        28.0,
+        if can { "#ffffff" } else { "#aab39a" },
+        "#2c4c18",
+        "center",
+        true,
+    );
+
+    if let Some((msg, _, bad)) = &g.toast {
+        p.rr(W * 0.5 - 150.0, 690.0, 300.0, 34.0, 10.0, rgba(20, 32, 12, 0.92));
+        p.text(msg, W * 0.5, 712.0, 14.0, if *bad { "#ffb59c" } else { "#dff0c5" }, "center", false);
+    }
+}
+
 fn draw_menu(p: &P, g: &Game) {
     // 整屏草坪
     p.rect(0.0, 0.0, W, H, "#4f8c2c");
@@ -1336,7 +1519,7 @@ fn draw_menu(p: &P, g: &Game) {
         p.save();
         p.c.translate(cx as f64, 672.0);
         p.c.scale(0.86, 0.86);
-        draw_plant_kind(p, kind, 0.0, 0.0, g.time + t, 1.0, 1.0);
+        draw_plant_kind(p, kind, 0.0, 0.0, g.time + t, 1.0, 1.0, 0.0);
         p.restore();
     }
 
@@ -1371,9 +1554,9 @@ fn draw_menu(p: &P, g: &Game) {
     p.rr(330.0, 262.0, 620.0, 186.0, 18.0, rgba(14, 32, 10, 0.78));
     p.rr_s(330.0, 262.0, 620.0, 186.0, 18.0, 2.0, rgba(233, 196, 106, 0.45));
     let lines = [
-        ("点击卡片选择植物，再点击草坪种下", "#f3f8e6", 18.0),
-        ("新增土豆雷、火爆辣椒、三线射手、窝瓜", "#f3f8e6", 18.0),
-        ("三个关卡：白天 8 波 / 黄昏 10 波 / 夜晚 12 波", "#f3f8e6", 18.0),
+        ("每关先选种子，再点击卡片和草坪种植", "#f3f8e6", 18.0),
+        ("新增卷心菜投手、星星果、大蒜、地刺", "#f3f8e6", 18.0),
+        ("三个关卡：6 / 7 / 8 个卡槽，波次逐关变强", "#f3f8e6", 18.0),
         ("空格暂停 · R 重开 · 右键取消选择", "#a9c786", 13.0),
     ];
     for (i, (line, col, size)) in lines.iter().enumerate() {
@@ -1432,7 +1615,11 @@ fn draw_end(p: &P, g: &Game, win: bool) {
         "僵尸吃掉了你的脑子…"
     };
     let sub = if win {
-        "你成功撑过了 10 波僵尸"
+        if g.level + 1 < LEVEL_COUNT {
+            "本关守住，下一关的僵尸更强"
+        } else {
+            "三个关卡全部守住，前院安全了"
+        }
     } else {
         "下次多种点向日葵，早点布防线"
     };
@@ -1474,7 +1661,7 @@ fn draw_end(p: &P, g: &Game, win: bool) {
     p.rr(AGAIN_BTN.0, AGAIN_BTN.1, AGAIN_BTN.2, AGAIN_BTN.3, 14.0, "#63a838");
     p.rr_s(AGAIN_BTN.0, AGAIN_BTN.1, AGAIN_BTN.2, AGAIN_BTN.3, 14.0, 3.0, "#cdf39b");
     p.text_out(
-        "再 来 一 局",
+        if win && g.level + 1 < LEVEL_COUNT { "下 一 关" } else { "再 来 一 局" },
         W * 0.5,
         AGAIN_BTN.1 + 38.0,
         28.0,

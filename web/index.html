@@ -816,7 +816,7 @@
     merged.forEach((u, k) => packUrls.set(k, u));
     Object.entries(IMG_SRC).filter(([k]) => k.startsWith('r_')).forEach(([k, v]) => enqueue(k, v));
   };
-  packReanim();
+  await packReanim();
   packLater('./assets-zombies.tar', 100, () => {
     Object.entries(IMG_SRC).filter(([k]) => k.startsWith('z_')).forEach(([k, v]) => enqueue(k, v));
   });

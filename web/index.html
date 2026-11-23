@@ -806,7 +806,7 @@
   });
   const packReanim = async () => {
     const merged = new Map();
-    for (const url of ['./assets-reanim-0-__ASSET_VERSION__.tar', './assets-reanim-1-__ASSET_VERSION__.tar']) {
+    for (const url of ['./assets-reanim-0-__ASSET_VERSION__.tar', './assets-reanim-1-__ASSET_VERSION__.tar', './assets-reanim-2-__ASSET_VERSION__.tar', './assets-reanim-3-__ASSET_VERSION__.tar', './assets-reanim-4-__ASSET_VERSION__.tar', './assets-reanim-5-__ASSET_VERSION__.tar', './assets-reanim-6-__ASSET_VERSION__.tar', './assets-reanim-7-__ASSET_VERSION__.tar']) {
       try {
         const files = await fetchAssetPack(url);
         files.forEach((u, k) => merged.set(k, u));

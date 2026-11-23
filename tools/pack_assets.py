@@ -63,9 +63,10 @@ if __name__ == '__main__':
                 for f in fs:
                     fp = os.path.join(b, f)
                     reanim_files.append((os.path.getsize(fp), fp))
-    bins = [[], []]
+    # 6MB 分包在 GitHub Pages 上仍会被 CDN 截断，拆成 8 个约 1.5MB 的小包更稳。
+    bins = [[] for _ in range(8)]
     for size, p in sorted(reanim_files, reverse=True):
-        i = 0 if sum(x[0] for x in bins[0]) <= sum(x[0] for x in bins[1]) else 1
+        i = min(range(len(bins)), key=lambda j: sum(x[0] for x in bins[j]))
         bins[i].append((size, p))
     for idx, items in enumerate(bins):
         out = os.path.join(OUT, f'assets-reanim-{idx}.tar')

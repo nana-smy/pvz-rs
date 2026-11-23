@@ -895,12 +895,12 @@ pub const BTN_SURVIVAL: (f32, f32, f32, f32) = (498.0, 512.0, 284.0, 50.0);
 pub const MAP_BACK: (f32, f32, f32, f32) = (16.0, 14.0, 104.0, 38.0);
 
 pub const CHOOSE_COLS: usize = 10;
-pub const CHOOSE_X: f32 = 178.0;
-pub const CHOOSE_Y: f32 = 248.0;
-pub const CHOOSE_W: f32 = 96.0;
-pub const CHOOSE_H: f32 = 74.0;
-pub const CHOOSE_GAP_X: f32 = 6.0;
-pub const CHOOSE_GAP_Y: f32 = 6.0;
+pub const CHOOSE_X: f32 = 23.0;
+pub const CHOOSE_Y: f32 = 206.0;
+pub const CHOOSE_W: f32 = 118.0;
+pub const CHOOSE_H: f32 = 86.0;
+pub const CHOOSE_GAP_X: f32 = 4.0;
+pub const CHOOSE_GAP_Y: f32 = 4.0;
 pub const CHOOSE_START: (f32, f32, f32, f32) = (470.0, 660.0, 340.0, 52.0);
 
 pub fn choose_rect(i: usize) -> (f32, f32, f32, f32) {
@@ -915,7 +915,7 @@ pub fn choose_rect(i: usize) -> (f32, f32, f32, f32) {
 }
 
 pub fn seed_slot_rect(i: usize) -> (f32, f32, f32, f32) {
-    (330.0 + i as f32 * 62.0, 180.0, 56.0, 64.0)
+    (300.0 + i as f32 * 78.0, 116.0, 72.0, 72.0)
 }
 
 pub fn cell_center(row: usize, col: usize, h: f32) -> (f32, f32) {

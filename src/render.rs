@@ -1792,6 +1792,26 @@ fn hovered_card(g: &Game) -> Option<usize> {
     None
 }
 
+
+// 卡片/选卡图标：直接从 reanim 图集取整格，按框缩放，保证不会画到卡片外。
+fn draw_plant_icon(p: &P, kind: PlantKind, t: f32, bx: f32, by: f32, bw: f32, bh: f32) -> bool {
+    let Some(art) = art_of(kind) else { return false };
+    let Some(ch) = crate::reanim::by_name(reanim_plant_name(art)) else { return false };
+    if !ch.has(&ch.base) {
+        return false;
+    }
+    let Some(img) = assets::reanim_img(ch.base.slot) else { return false };
+    let clip = ch.base;
+    let scale = ((bw / clip.w).min(bh / clip.h)).max(0.01);
+    let dw = clip.w * scale;
+    let dh = clip.h * scale;
+    let x = bx + (bw - dw) * 0.5;
+    let y = by + (bh - dh) * 0.5;
+    let frame = ((t * clip.fps.max(1.0)) as u32) % clip.frames.max(1) as u32;
+    draw_cell(p.c, &img, &clip, frame, x, y, dw, dh);
+    true
+}
+
 fn draw_card(p: &P, g: &Game, i: usize) {
     let Some(&k) = g.seeds.get(i) else { return };
     let (x, y, w, h) = card_rect(i);
@@ -1833,10 +1853,12 @@ fn draw_card(p: &P, g: &Game, i: usize) {
     if !afford && cd <= 0.0 {
         p.alpha(0.55);
     }
-    p.c.translate((x + w * 0.5) as f64, (y + 57.0) as f64);
-    let cs = if k.is_base() { 0.60 } else { 0.34 };
-    p.c.scale(cs, cs);
-    draw_plant_kind(p, k, 0.0, 0.0, g.time, 1.0, 1.0, 0.0);
+    if !draw_plant_icon(p, k, g.time, x + 5.0, y + 3.0, w - 10.0, h - 20.0) {
+        p.c.translate((x + w * 0.5) as f64, (y + 57.0) as f64);
+        let cs = if k.is_base() { 0.60 } else { 0.38 };
+        p.c.scale(cs, cs);
+        draw_plant_anim(p, k, 0.0, 0.0, g.time, 1.0, 1.0, 0.0);
+    }
     p.restore();
     p.alpha(1.0);
 
@@ -1946,8 +1968,8 @@ fn draw_chooser(p: &P, g: &Game) {
     // 已选槽位
     p.text(
         &format!("已带 {}/{}", g.seeds.len(), g.cfg.slots),
-        246.0,
-        214.0,
+        230.0,
+        104.0,
         16.0,
         if g.seeds.len() == g.cfg.slots { "#ffe08a" } else { "#cfe6b2" },
         "left",
@@ -1959,11 +1981,13 @@ fn draw_chooser(p: &P, g: &Game) {
         p.rr(x, y, w, h, 9.0, rgba(20, 40, 14, 0.72));
         p.rr_s(x, y, w, h, 9.0, 1.5, if filled.is_some() { "#e9c46a".to_string() } else { rgba(210, 230, 180, 0.28) });
         if let Some(k) = filled {
-            p.save();
-            p.c.translate((x + w * 0.5) as f64, (y + h - 5.0) as f64);
-            p.c.scale(0.34, 0.34);
-            draw_plant_kind(p, k, 0.0, 0.0, g.time, 1.0, 1.0, 0.0);
-            p.restore();
+            if !draw_plant_icon(p, k, g.time, x + 3.0, y + 3.0, w - 6.0, h - 6.0) {
+                p.save();
+                p.c.translate((x + w * 0.5) as f64, (y + h - 5.0) as f64);
+                p.c.scale(0.44, 0.44);
+                draw_plant_anim(p, k, 0.0, 0.0, g.time, 1.0, 1.0, 0.0);
+                p.restore();
+            }
             p.circle(x + w - 7.0, y + 8.0, 7.0, rgba(20, 30, 14, 0.72));
             p.text("×", x + w - 7.0, y + 12.0, 11.0, "#ffd7c2", "center", true);
         } else {
@@ -1979,18 +2003,20 @@ fn draw_chooser(p: &P, g: &Game) {
         p.rr(x + 2.0, y + 3.0, w, h, 11.0, rgba(0, 0, 0, 0.3));
         p.rr(x, y, w, h, 11.0, if selected { "#fff0b0" } else if hover { "#f4e9cb" } else { "#e9dcb6" });
         p.rr_s(x, y, w, h, 11.0, if selected { 3.0 } else { 1.8 }, if selected { "#ffd34a" } else { "#977443" });
-        p.save();
-        p.c.translate((x + w * 0.5) as f64, (y + h - 9.0) as f64);
-        p.c.scale(0.34, 0.34);
-        draw_plant_kind(p, *k, 0.0, 0.0, g.time + i as f32 * 0.3, 1.0, 1.0, 0.0);
-        p.restore();
-        p.text(k.name(), x + w * 0.5, y + h - 2.0, 9.5, "#4b3211", "center", false);
+        if !draw_plant_icon(p, *k, g.time + i as f32 * 0.3, x + 4.0, y + 18.0, w - 8.0, h - 21.0) {
+            p.save();
+            p.c.translate((x + w * 0.5) as f64, (y + h - 9.0) as f64);
+            p.c.scale(0.52, 0.52);
+            draw_plant_anim(p, *k, 0.0, 0.0, g.time + i as f32 * 0.3, 1.0, 1.0, 0.0);
+            p.restore();
+        }
+        p.text(k.name(), x + 8.0, y + 20.0, 10.5, "#4b3211", "left", false);
         p.rr(x + w - 30.0, y + 3.0, 27.0, 14.0, 7.0, rgba(80, 54, 18, 0.16));
-        p.text(&format!("{}", k.cost()), x + w - 16.5, y + 12.0, 9.5, "#4b3211", "center", true);
+        p.text(&format!("{}", k.cost()), x + w - 16.5, y + 12.0, 10.5, "#4b3211", "center", true);
         if selected {
             let n = g.seeds.iter().position(|x| *x == *k).unwrap_or(0) + 1;
-            p.circle(x + 13.0, y + 13.0, 10.0, "#ffd34a");
-            p.text(&format!("{}", n), x + 13.0, y + 17.0, 12.0, "#3c2604", "center", true);
+            p.circle(x + w - 15.0, y + h - 15.0, 10.0, "#ffd34a");
+            p.text(&format!("{}", n), x + w - 15.0, y + h - 11.0, 12.0, "#3c2604", "center", true);
         }
     }
 

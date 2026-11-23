@@ -710,7 +710,7 @@
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
         loadingText.textContent = '正在加载首屏素材（约 420KB）…';
-        const r = await fetch(packUrl + '?v=__ASSET_VERSION__&r=' + attempt, { cache: 'force-cache' });
+        const r = await fetch(packUrl + '?v=__ASSET_VERSION__&r=' + attempt, { cache: 'force-cache', signal: AbortSignal.timeout(20000) });
         if (!r.ok) throw new Error('HTTP ' + r.status);
         const buf = await r.arrayBuffer();
         const files = untar(buf);
@@ -806,11 +806,13 @@
   });
   const packReanim = async () => {
     const merged = new Map();
-    for (const url of ['./assets-reanim-0-__ASSET_VERSION__.tar', './assets-reanim-1-__ASSET_VERSION__.tar', './assets-reanim-2-__ASSET_VERSION__.tar', './assets-reanim-3-__ASSET_VERSION__.tar', './assets-reanim-4-__ASSET_VERSION__.tar', './assets-reanim-5-__ASSET_VERSION__.tar', './assets-reanim-6-__ASSET_VERSION__.tar', './assets-reanim-7-__ASSET_VERSION__.tar']) {
-      try {
-        const files = await fetchAssetPack(url);
-        files.forEach((u, k) => merged.set(k, u));
-      } catch (e) { console.warn('[pvz] reanim 分包失败', url, e); }
+    const urls = ['./assets-reanim-0-__ASSET_VERSION__.tar', './assets-reanim-1-__ASSET_VERSION__.tar', './assets-reanim-2-__ASSET_VERSION__.tar', './assets-reanim-3-__ASSET_VERSION__.tar', './assets-reanim-4-__ASSET_VERSION__.tar', './assets-reanim-5-__ASSET_VERSION__.tar', './assets-reanim-6-__ASSET_VERSION__.tar', './assets-reanim-7-__ASSET_VERSION__.tar'];
+    const results = await Promise.all(urls.map(url => fetchAssetPack(url).catch(e => {
+      console.warn('[pvz] reanim 分包失败', url, e);
+      return null;
+    })));
+    for (const files of results) {
+      if (files) files.forEach((u, k) => merged.set(k, u));
     }
     if (merged.size < 100) console.warn('[pvz] reanim 分包不完整，将回退散资源', merged.size);
     merged.forEach((u, k) => packUrls.set(k, u));

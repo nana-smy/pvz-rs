@@ -714,8 +714,10 @@
     const chunks = [];
     let got = 0;
     while (true) {
-      const idle = new Promise((_, rej) => setTimeout(() => rej(new Error('idle timeout')), 15000));
+      let tid = 0;
+      const idle = new Promise((_, rej) => { tid = setTimeout(() => rej(new Error('idle timeout')), 15000); });
       const step = await Promise.race([reader.read(), idle]);
+      clearTimeout(tid);
       if (step.done) break;
       chunks.push(step.value);
       got += step.value.length;
@@ -754,7 +756,7 @@
         clearTimeout(timer);
         resolve();
       };
-      const timer = setTimeout(finish, 30000);
+      const timer = setTimeout(finish, 12000);
       const start = () => {
         attempt += 1;
         const img = new Image();
@@ -862,7 +864,10 @@
     loadingText.textContent = '正在加载植物素材 ' + Math.min(PLANT_MB, got / 1048576).toFixed(1) + ' / ' + PLANT_MB + ' MB…';
   };
   const plantKeys = await packReanimGroup(REANIM_PLANT_URLS, 'plant', 99, plantProg);
-  await Promise.all(plantKeys.map(([k, v]) => enqueue(k, v)));
+  // 兜底：极端慢网（包下不动、散图逐张超时）不能把首屏锁死在一分多钟，
+  // 45 秒到点就放行；已排队的图会在进入游戏后继续补，图标/贴图随之出现。
+  const decodeAll = Promise.all(plantKeys.map(([k, v]) => enqueue(k, v)));
+  await Promise.race([decodeAll, new Promise((r) => setTimeout(r, 45000))]);
   // 僵尸：等植物包落地后再启动（错开并发，别和首屏抢带宽）。先 walk，再补其余动作。
   const packZombie = async () => {
     for (const urls of [REANIM_ZWALK_URLS, REANIM_ZX_URLS]) {

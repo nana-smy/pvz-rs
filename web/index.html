@@ -7,6 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="PvZ Rust" />
+<link rel="icon" href="data:,">
 <title>植物大战僵尸 · Rust 重制版</title>
 <meta name="description" content="用 Rust + WebAssembly 重写的植物大战僵尸，使用正版植物立绘与音效素材，可直接在浏览器游玩。" />
 <style>
@@ -732,7 +733,14 @@
     let lastErr = null;
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
-        const r = await fetch(packUrl + '?v=__ASSET_VERSION__&r=' + attempt, { cache: 'force-cache' });
+        // 只卡"响应头迟迟不回"（20s）；一旦开始回数据就交给下面的空闲超时，
+        // 避免慢速但持续在传的大包被整体超时杀掉。
+        const ctl = new AbortController();
+        const hdr = setTimeout(() => ctl.abort(), 20000);
+        let r;
+        try {
+          r = await fetch(packUrl + '?v=__ASSET_VERSION__&r=' + attempt, { cache: 'force-cache', signal: ctl.signal });
+        } finally { clearTimeout(hdr); }
         if (!r.ok) throw new Error('HTTP ' + r.status);
         const buf = await readAll(r, onProgress);
         // untar 以 ArrayBuffer 视图切块，这里交回底层 buffer
@@ -776,13 +784,11 @@
       };
       start();
     });
-  try {
-    const packed = await fetchAssetPack();
-    packed.forEach((u, k) => packUrls.set(k, u));
-  } catch (e) {
-    loadingText.textContent = '素材包加载失败，回退逐个加载…';
-    console.error('[pvz] 单包失败，回退散资源', e);
-  }
+  // ---- 首屏素材编排 ----
+  // 目标：放行首屏只依赖 首屏包(0.43MB) + 人体图集植物段(3.7MB)。
+  // 僵尸(8.3MB)、音效(6.2MB)、背景帧等一律等首屏可交互之后再说。
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const uiPackPromise = fetchAssetPack().catch((e) => { console.error('[pvz] 首屏包失败', e); return null; });
   // 限制并发，避免 GitHub Pages 的 HTTP/2 连接被上百张图同时打满。
   const jobs = [];
   let active = 0;
@@ -797,13 +803,16 @@
     jobs.push({ run: () => loadOne(key, src).then(resolve) });
     pump();
   });
+  // 低并发补图：首屏降级或后台补量时用，别跟首屏抢连接
+  const slowLoad = async (keys, conc) => {
+    let i = 0;
+    const worker = async () => {
+      while (i < keys.length) { const [k, v] = keys[i++]; await loadOne(k, v); }
+    };
+    await Promise.all(Array.from({ length: conc }, worker));
+  };
   // 首屏只等主菜单需要的几张图；49 张卡面与地图背景随后由核心包补齐。
   const UI_KEYS = new Set(['bg_day', 'sunflower', 'peashooter', 'wallnut', 'cherrybomb', 'snowpea', 'pea']);
-  const coreImages = Promise.all(Object.entries(IMG_SRC)
-    .filter(([k]) => UI_KEYS.has(k))
-    .map(([k, v]) => enqueue(k, v)));
-  await Promise.race([coreImages, new Promise((r) => setTimeout(r, 6000))]);
-  // 音频与僵尸帧分两个包在后台加载，不阻塞主菜单与选卡。
   const packLater = async (url, min, after) => {
     try {
       const files = await fetchAssetPack(url);
@@ -812,31 +821,19 @@
       if (after) after(files);
     } catch (e) { console.warn('[pvz] 后台素材包失败', url, e); }
   };
-  packLater('./assets-core.tar', 40, () => {
-    Object.entries(IMG_SRC).filter(([k]) => !k.startsWith('z_') && !k.startsWith('r_') && !UI_KEYS.has(k)).forEach(([k, v]) => enqueue(k, v));
-  });
-  packLater('./assets-audio.tar', 10, () => {
-    for (const k of Object.keys(SFX_SRC)) {
-      const p = SFX_SRC[k].replace(/^\.\//, '');
-      if (packUrls.has(p)) SFX_SRC[k] = packUrls.get(p);
-    }
-    if (typeof bgm !== 'undefined') {
-      const m = packUrls.get('audio/music.mp3');
-      if (m && bgm) bgm.src = m;
-    }
-  });
-  // reanim 图集按植物/僵尸分组：植物包必须首屏就绪（选卡与战斗都要用），
-  // 僵尸包在后台并行拉，进入战斗前 18 秒空档足够补完，避免首屏被 8MB 僵尸海拖住。
-  const REANIM_PLANT_URLS = ['./assets-reanim-p0-__ASSET_VERSION__.tar', './assets-reanim-p1-__ASSET_VERSION__.tar', './assets-reanim-p2-__ASSET_VERSION__.tar'];
-  // 僵尸分两档：walk 第一波就要，其余动作（eat/die/special）可以更晚到
+
+  // reanim 图集分三档：植物（首屏必等）、僵尸行走（第一波就要）、僵尸其它动作
+  // 植物拆两段：pi 站立/特殊（2.0MB，首屏必等）、ps 射击（1.6MB，进游戏前后台补）
+  const REANIM_PLANT_URLS = ['./assets-reanim-pi0-__ASSET_VERSION__.tar', './assets-reanim-pi1-__ASSET_VERSION__.tar'];
+  const REANIM_PSHOOT_URLS = ['./assets-reanim-ps0-__ASSET_VERSION__.tar', './assets-reanim-ps1-__ASSET_VERSION__.tar'];
   const REANIM_ZWALK_URLS = ['./assets-reanim-zw0-__ASSET_VERSION__.tar', './assets-reanim-zw1-__ASSET_VERSION__.tar'];
   const REANIM_ZX_URLS = ['./assets-reanim-zo0-__ASSET_VERSION__.tar', './assets-reanim-zo1-__ASSET_VERSION__.tar', './assets-reanim-zo2-__ASSET_VERSION__.tar', './assets-reanim-zo3-__ASSET_VERSION__.tar', './assets-reanim-zo4-__ASSET_VERSION__.tar'];
   const reanimGroup = window.__REANIM_GROUP || {};
-  const packReanimGroup = async (urls, kind, conc = 99, onProgress = null) => {
+  const packReanimGroup = async (urls, kind, conc = 99, onProgress = null, clipFilter = null) => {
     const got = new Map();
     const bump = (url) => (n) => {
       got.set(url, n);
-      if (onProgress) onProgress([...got.values()].reduce((a, b) => a + b, 0));
+      if (onProgress) onProgress([...got.values()].reduce((x, y) => x + y, 0));
     };
     const one = (url) => fetchAssetPack(url, onProgress ? bump(url) : null).catch(e => {
       console.warn('[pvz] reanim 分包失败', url, e);
@@ -851,39 +848,84 @@
       if (!files) continue;
       files.forEach((u, k) => { packUrls.set(k, u); added += 1; });
     }
-    // 每组只覆盖一部分 clip（植物 / 僵尸 walk / 僵尸其它），所以不按全局数量校验，
-    // 只在该组整包全丢时告警。
-    const keys = Object.entries(IMG_SRC)
-      .filter(([k]) => k.startsWith('r_') && (kind ? reanimGroup[k] === kind : true));
+    // 每组只覆盖一部分 clip，不按全局数量校验，只在该组整包全丢时告警
     if (added === 0) console.warn('[pvz] reanim 分包整组失败', kind, urls[0]);
-    return keys;
+    return Object.entries(IMG_SRC)
+      .filter(([k]) => k.startsWith('r_') && (kind ? reanimGroup[k] === kind : true))
+      .filter(([k]) => (clipFilter ? clipFilter(k) : true));
   };
-  // 植物：下载 + 解码都完成后才放行首屏
-  const PLANT_MB = 3.6;
+  const PLANT_MB = 2.1;
   const plantProg = (got) => {
-    loadingText.textContent = '正在加载植物素材 ' + Math.min(PLANT_MB, got / 1048576).toFixed(1) + ' / ' + PLANT_MB + ' MB…';
+    loadingText.textContent = '正在加载原声素材 ' + Math.min(PLANT_MB, got / 1048576).toFixed(1) + ' / ' + PLANT_MB + ' MB…';
   };
-  const plantKeys = await packReanimGroup(REANIM_PLANT_URLS, 'plant', 99, plantProg);
-  // 兜底：极端慢网（包下不动、散图逐张超时）不能把首屏锁死在一分多钟，
-  // 45 秒到点就放行；已排队的图会在进入游戏后继续补，图标/贴图随之出现。
-  const decodeAll = Promise.all(plantKeys.map(([k, v]) => enqueue(k, v)));
-  await Promise.race([decodeAll, new Promise((r) => setTimeout(r, 45000))]);
-  // 僵尸：等植物包落地后再启动（错开并发，别和首屏抢带宽）。先 walk，再补其余动作。
+
+  const isShoot = (k) => /_shoot$/.test(k);
+  const allPlantKeys = Object.entries(IMG_SRC)
+    .filter(([k]) => k.startsWith('r_') && reanimGroup[k] === 'plant' && !isShoot(k));
+  const allShootKeys = Object.entries(IMG_SRC)
+    .filter(([k]) => k.startsWith('r_') && reanimGroup[k] === 'plant' && isShoot(k));
+  // 植物包与首屏包并行下载，别串行白等
+  const plantPackEarly = Promise.race([
+    packReanimGroup(REANIM_PLANT_URLS, 'plant', 99, plantProg, (k) => !isShoot(k)), sleep(30000).then(() => null),
+  ]);
+
+  const packed = await uiPackPromise;
+  if (packed) {
+    packed.forEach((u, k) => packUrls.set(k, u));
+  } else {
+    loadingText.textContent = '首屏包加载失败，回退逐个加载…';
+  }
+  const coreImages = Promise.all(Object.entries(IMG_SRC)
+    .filter(([k]) => UI_KEYS.has(k))
+    .map(([k, v]) => enqueue(k, v)));
+  await Promise.race([coreImages, sleep(6000)]);
+  // 核心包（1.7MB，含 49 张卡面与地图背景）仍需在选卡前到位
+  packLater('./assets-core.tar', 40, () => {
+    Object.entries(IMG_SRC).filter(([k]) => !k.startsWith('z_') && !k.startsWith('r_') && !UI_KEYS.has(k)).forEach(([k, v]) => enqueue(k, v));
+  });
+
+  // 植物图集：拿到包就解码；30 秒还没拿到就降级（清空队列，进入后低并发补图）
+  const plantPack = await plantPackEarly;
+  if (plantPack) {
+    await Promise.race([Promise.all(plantPack.map(([k, v]) => enqueue(k, v))), sleep(25000)]);
+  } else {
+    jobs.length = 0;
+    window.__pvzPlantPending = allPlantKeys;
+    console.warn('[pvz] 植物包超时，改为进入后低并发补图');
+  }
+
   const packZombie = async () => {
     for (const urls of [REANIM_ZWALK_URLS, REANIM_ZX_URLS]) {
       const keys = await packReanimGroup(urls, 'zombie', 2).catch(() => []);
       await Promise.all(keys.map(([k, v]) => enqueue(k, v)));
     }
   };
-  // 首屏真正可交互（body.ready）之后才开始拉僵尸，彻底让出首屏带宽
-  const afterReady = () => setTimeout(packZombie, 400);
+  // 首屏可交互（body.ready）之后才补图、拉僵尸、拉音效
+  const afterReady = () => setTimeout(async () => {
+    if (window.__pvzPlantPending) {
+      await slowLoad(window.__pvzPlantPending, 2);
+      window.__pvzPlantPending = null;
+    }
+    // 射击帧只落后几分钟内的第一枪，优先补
+    packReanimGroup(REANIM_PSHOOT_URLS, 'plant', 2, null, isShoot)
+      .then((keys) => Promise.all(keys.map(([k, v]) => enqueue(k, v)))).catch(() => {});
+    packZombie();
+    packLater('./assets-zombies.tar', 100, () => {
+      Object.entries(IMG_SRC).filter(([k]) => k.startsWith('z_')).forEach(([k, v]) => enqueue(k, v));
+    });
+    packLater('./assets-audio.tar', 10, () => {
+      for (const k of Object.keys(SFX_SRC)) {
+        const p = SFX_SRC[k].replace(/^(\.\/)?/, '');
+        if (packUrls.has(p)) SFX_SRC[k] = packUrls.get(p);
+      }
+      const m = packUrls.get('audio/music.mp3');
+      if (m && bgm) bgm.src = m;
+    });
+  }, 400);
   if (document.body.classList.contains('ready')) afterReady();
   else new MutationObserver((_, ob) => {
     if (document.body.classList.contains('ready')) { ob.disconnect(); afterReady(); }
   }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
-  packLater('./assets-zombies.tar', 100, () => {
-    Object.entries(IMG_SRC).filter(([k]) => k.startsWith('z_')).forEach(([k, v]) => enqueue(k, v));
-  });
 
   function fit() {
     const stage = document.getElementById('stage');

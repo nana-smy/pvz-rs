@@ -61,8 +61,11 @@ if __name__ == '__main__':
     for name, c in man['chars'].items():
         plant = 'idle' in c['clips'] or 'shoot' in c['clips']
         for cn, clip in c['clips'].items():
-            kind_of[clip['file']] = 'p' if plant else ('zw' if cn == 'walk' else 'zo')
-    groups = {'p': [], 'zw': [], 'zo': []}
+            if plant:
+                kind_of[clip['file']] = 'ps' if cn == 'shoot' else 'pi'
+            else:
+                kind_of[clip['file']] = 'zw' if cn == 'walk' else 'zo'
+    groups = {'pi': [], 'ps': [], 'zw': [], 'zo': []}
     for p in glob.glob(os.path.join(ROOT, 'assets', 'reanim', '*')):
         files = [p] if os.path.isfile(p) else [
             os.path.join(b, f) for b, _, fs in os.walk(p) for f in fs]

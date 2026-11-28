@@ -52,30 +52,39 @@ if __name__ == '__main__':
     build('assets-core.tar', os.path.join(ROOT, 'assets-webp'), ['plants', 'bg', 'projectiles'])
     build('assets-zombies.tar', os.path.join(ROOT, 'assets-webp'), ['zombies'])
     build('assets-audio.tar', os.path.join(ROOT, 'assets'), ['audio'])
-    # GitHub Pages 对单次大文件传输偶发断连；按体积均分两包，页面并行拉取后合并。
-    import glob
-    reanim_files = []
+    # GitHub Pages 单次大文件传输偶发断连，单包上限压到 ~1.3MB。
+    # 植物（约 3.8MB）必须首屏就绪，僵尸（约 8.4MB）后台并行拉，先出画面再补海。
+    import glob, json
+    man = json.load(open(os.path.join(ROOT, 'assets', 'reanim', 'manifest.json'), encoding='utf-8'))
+    kind_of = {}
+    for name, c in man['chars'].items():
+        k = 'plant' if ('idle' in c['clips'] or 'shoot' in c['clips']) else 'zombie'
+        for clip in c['clips'].values():
+            kind_of[clip['file']] = k
+    groups = {'p': [], 'z': []}
     for p in glob.glob(os.path.join(ROOT, 'assets', 'reanim', '*')):
-        if os.path.isfile(p):
-            reanim_files.append((os.path.getsize(p), p))
-        elif os.path.isdir(p):
-            for b, _, fs in os.walk(p):
-                for f in fs:
-                    fp = os.path.join(b, f)
-                    reanim_files.append((os.path.getsize(fp), fp))
-    # 6MB 分包在 GitHub Pages 上仍会被 CDN 截断，拆成 8 个约 1.5MB 的小包更稳。
-    bins = [[] for _ in range(8)]
-    for size, p in sorted(reanim_files, reverse=True):
-        i = min(range(len(bins)), key=lambda j: sum(x[0] for x in bins[j]))
-        bins[i].append((size, p))
-    for idx, items in enumerate(bins):
-        out = os.path.join(OUT, f'assets-reanim-{idx}.tar')
-        with tarfile.open(out, 'w', format=tarfile.USTAR_FORMAT) as tar:
-            for _, p in items:
-                rel = os.path.relpath(p, os.path.join(ROOT, 'assets')).replace(os.sep, '/')
-                ti = tar.gettarinfo(p, arcname='assets/' + rel)
-                ti.uid = ti.gid = 0
-                ti.uname = ti.gname = ''
-                with open(p, 'rb') as fh:
-                    tar.addfile(ti, fh)
-        print(f'assets-reanim-{idx}.tar', os.path.getsize(out), len(items))
+        files = [p] if os.path.isfile(p) else [
+            os.path.join(b, f) for b, _, fs in os.walk(p) for f in fs]
+        for fp in files:
+            rel = os.path.relpath(fp, os.path.join(ROOT, 'assets')).replace(os.sep, '/')
+            groups[kind_of.get(rel, 'z')[0]].append((os.path.getsize(fp), fp))
+    LIMIT = 1350 * 1024
+    for prefix, items in groups.items():
+        bins = []
+        for size, path in sorted(items, reverse=True):
+            target = next((b for b in bins if sum(x[0] for x in b) + size <= LIMIT), None)
+            if target is None:
+                bins.append([])
+                target = bins[-1]
+            target.append((size, path))
+        for idx, items_bin in enumerate(bins):
+            out = os.path.join(OUT, f'assets-reanim-{prefix}{idx}.tar')
+            with tarfile.open(out, 'w', format=tarfile.USTAR_FORMAT) as tar:
+                for _, path in items_bin:
+                    rel = os.path.relpath(path, os.path.join(ROOT, 'assets')).replace(os.sep, '/')
+                    ti = tar.gettarinfo(path, arcname='assets/' + rel)
+                    ti.uid = ti.gid = 0
+                    ti.uname = ti.gname = ''
+                    with open(path, 'rb') as fh:
+                        tar.addfile(ti, fh)
+            print(f'assets-reanim-{prefix}{idx}.tar', os.path.getsize(out), len(items_bin))

@@ -17,8 +17,8 @@ python3 tools/pack_assets.py
 ASSET_VERSION="$(git rev-parse --short HEAD 2>/dev/null || date +%Y%m%d%H%M%S)"
 sed -i "s/__ASSET_VERSION__/${ASSET_VERSION}/g" dist/index.html
 # 分包文件名带版本号：GitHub Pages CDN 曾缓存过被截断的旧 tar
-for i in $(seq 0 7); do
-  [ -f "dist/assets-reanim-$i.tar" ] && mv "dist/assets-reanim-$i.tar" "dist/assets-reanim-$i-${ASSET_VERSION}.tar"
+for f in dist/assets-reanim-p*.tar dist/assets-reanim-z*.tar; do
+  [ -e "$f" ] && mv "$f" "${f%.tar}-${ASSET_VERSION}.tar"
 done
 cp -r assets dist/assets
 cp -r assets-webp/. dist/assets/

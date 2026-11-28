@@ -103,9 +103,20 @@ pub fn by_name(name: &str) -> Option<&'static Char> {
     with open(os.path.join(ROOT, 'src', 'reanim.rs'), 'w', encoding='utf-8') as fh:
         fh.write(src)
 
+    # 植物/僵尸分组：clips 里带 idle 或 shoot 的是植物，其余是僵尸海。
+    # 前端据此先只等植物包（约 3.8MB），僵尸包后台并行加载。
+    group = {}
+    for name, c in chars.items():
+        kind = 'plant' if ('idle' in c['clips'] or 'shoot' in c['clips']) else 'zombie'
+        for clip in c['clips'].values():
+            group[clip['file'][len('reanim/'):-len('.webp')]] = kind
     js = ['window.__REANIM_SRC = {']
     for k in keys:
         js.append('  "r_%s": "assets/reanim/%s.webp",' % (k.replace('/', '_'), k))
+    js.append('};')
+    js.append('window.__REANIM_GROUP = {')
+    for k in keys:
+        js.append('  "r_%s": "%s",' % (k.replace('/', '_'), group.get(k, 'zombie')))
     js.append('};')
     with open(os.path.join(ROOT, 'web', 'reanim_keys.js'), 'w', encoding='utf-8') as fh:
         fh.write('\n'.join(js) + '\n')

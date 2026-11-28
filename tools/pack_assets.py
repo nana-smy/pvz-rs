@@ -56,18 +56,19 @@ if __name__ == '__main__':
     # 植物（约 3.8MB）必须首屏就绪，僵尸（约 8.4MB）后台并行拉，先出画面再补海。
     import glob, json
     man = json.load(open(os.path.join(ROOT, 'assets', 'reanim', 'manifest.json'), encoding='utf-8'))
+    # 分三组：p 植物（首屏必等）、zw 僵尸行走（第一波就要）、zo 僵尸其余动作
     kind_of = {}
     for name, c in man['chars'].items():
-        k = 'plant' if ('idle' in c['clips'] or 'shoot' in c['clips']) else 'zombie'
-        for clip in c['clips'].values():
-            kind_of[clip['file']] = k
-    groups = {'p': [], 'z': []}
+        plant = 'idle' in c['clips'] or 'shoot' in c['clips']
+        for cn, clip in c['clips'].items():
+            kind_of[clip['file']] = 'p' if plant else ('zw' if cn == 'walk' else 'zo')
+    groups = {'p': [], 'zw': [], 'zo': []}
     for p in glob.glob(os.path.join(ROOT, 'assets', 'reanim', '*')):
         files = [p] if os.path.isfile(p) else [
             os.path.join(b, f) for b, _, fs in os.walk(p) for f in fs]
         for fp in files:
             rel = os.path.relpath(fp, os.path.join(ROOT, 'assets')).replace(os.sep, '/')
-            groups[kind_of.get(rel, 'z')[0]].append((os.path.getsize(fp), fp))
+            groups[kind_of.get(rel, 'zo')].append((os.path.getsize(fp), fp))
     LIMIT = 1350 * 1024
     for prefix, items in groups.items():
         bins = []

@@ -826,7 +826,9 @@
   // reanim 图集按植物/僵尸分组：植物包必须首屏就绪（选卡与战斗都要用），
   // 僵尸包在后台并行拉，进入战斗前 18 秒空档足够补完，避免首屏被 8MB 僵尸海拖住。
   const REANIM_PLANT_URLS = ['./assets-reanim-p0-__ASSET_VERSION__.tar', './assets-reanim-p1-__ASSET_VERSION__.tar', './assets-reanim-p2-__ASSET_VERSION__.tar'];
-  const REANIM_ZOMBIE_URLS = ['./assets-reanim-z0-__ASSET_VERSION__.tar', './assets-reanim-z1-__ASSET_VERSION__.tar', './assets-reanim-z2-__ASSET_VERSION__.tar', './assets-reanim-z3-__ASSET_VERSION__.tar', './assets-reanim-z4-__ASSET_VERSION__.tar', './assets-reanim-z5-__ASSET_VERSION__.tar', './assets-reanim-z6-__ASSET_VERSION__.tar'];
+  // 僵尸分两档：walk 第一波就要，其余动作（eat/die/special）可以更晚到
+  const REANIM_ZWALK_URLS = ['./assets-reanim-zw0-__ASSET_VERSION__.tar', './assets-reanim-zw1-__ASSET_VERSION__.tar'];
+  const REANIM_ZX_URLS = ['./assets-reanim-zo0-__ASSET_VERSION__.tar', './assets-reanim-zo1-__ASSET_VERSION__.tar', './assets-reanim-zo2-__ASSET_VERSION__.tar', './assets-reanim-zo3-__ASSET_VERSION__.tar', './assets-reanim-zo4-__ASSET_VERSION__.tar'];
   const reanimGroup = window.__REANIM_GROUP || {};
   const packReanimGroup = async (urls, kind, conc = 99, onProgress = null) => {
     const got = new Map();
@@ -847,9 +849,11 @@
       if (!files) continue;
       files.forEach((u, k) => { packUrls.set(k, u); added += 1; });
     }
+    // 每组只覆盖一部分 clip（植物 / 僵尸 walk / 僵尸其它），所以不按全局数量校验，
+    // 只在该组整包全丢时告警。
     const keys = Object.entries(IMG_SRC)
       .filter(([k]) => k.startsWith('r_') && (kind ? reanimGroup[k] === kind : true));
-    if (added < keys.length) console.warn('[pvz] reanim 分包不完整', kind, added, '/', keys.length);
+    if (added === 0) console.warn('[pvz] reanim 分包整组失败', kind, urls[0]);
     return keys;
   };
   // 植物：下载 + 解码都完成后才放行首屏
@@ -859,9 +863,13 @@
   };
   const plantKeys = await packReanimGroup(REANIM_PLANT_URLS, 'plant', 99, plantProg);
   await Promise.all(plantKeys.map(([k, v]) => enqueue(k, v)));
-  // 僵尸：等植物包落地后再启动（错开并发，别和首屏抢带宽），2 包一批串行推进
-  const packZombie = () => packReanimGroup(REANIM_ZOMBIE_URLS, 'zombie', 2)
-    .then((keys) => Promise.all(keys.map(([k, v]) => enqueue(k, v)))).catch(() => {});
+  // 僵尸：等植物包落地后再启动（错开并发，别和首屏抢带宽）。先 walk，再补其余动作。
+  const packZombie = async () => {
+    for (const urls of [REANIM_ZWALK_URLS, REANIM_ZX_URLS]) {
+      const keys = await packReanimGroup(urls, 'zombie', 2).catch(() => []);
+      await Promise.all(keys.map(([k, v]) => enqueue(k, v)));
+    }
+  };
   // 首屏真正可交互（body.ready）之后才开始拉僵尸，彻底让出首屏带宽
   const afterReady = () => setTimeout(packZombie, 400);
   if (document.body.classList.contains('ready')) afterReady();

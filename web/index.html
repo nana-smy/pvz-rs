@@ -705,22 +705,41 @@
     }
     return out;
   }
-  async function fetchAssetPack(packUrl = ASSET_PACK) {
+  // 慢链路下"整体 20s 超时"会把正在正常下载的大包误杀，触发重试反而更慢。
+  // 改成：只看"空闲超时"——15 秒没收到任何字节才判失败，并汇报实时进度。
+  const readAll = async (resp, onProgress) => {
+    const total = parseInt(resp.headers.get('content-length') || '0', 10);
+    if (!resp.body) { const b = await resp.arrayBuffer(); onProgress && onProgress(b.byteLength, total); return new Uint8Array(b); }
+    const reader = resp.body.getReader();
+    const chunks = [];
+    let got = 0;
+    while (true) {
+      const idle = new Promise((_, rej) => setTimeout(() => rej(new Error('idle timeout')), 15000));
+      const step = await Promise.race([reader.read(), idle]);
+      if (step.done) break;
+      chunks.push(step.value);
+      got += step.value.length;
+      onProgress && onProgress(got, total);
+    }
+    const buf = new Uint8Array(got);
+    let off = 0;
+    for (const c of chunks) { buf.set(c, off); off += c.length; }
+    return buf;
+  };
+  async function fetchAssetPack(packUrl = ASSET_PACK, onProgress = null) {
     let lastErr = null;
-    for (let attempt = 0; attempt < 3; attempt++) {
+    for (let attempt = 0; attempt < 2; attempt++) {
       try {
-        loadingText.textContent = '正在加载首屏素材（约 420KB）…';
-        const r = await fetch(packUrl + '?v=__ASSET_VERSION__&r=' + attempt, { cache: 'force-cache', signal: AbortSignal.timeout(20000) });
+        const r = await fetch(packUrl + '?v=__ASSET_VERSION__&r=' + attempt, { cache: 'force-cache' });
         if (!r.ok) throw new Error('HTTP ' + r.status);
-        const buf = await r.arrayBuffer();
-        const files = untar(buf);
+        const buf = await readAll(r, onProgress);
+        // untar 以 ArrayBuffer 视图切块，这里交回底层 buffer
+        const files = untar(buf.buffer);
         if (files.size < 5) throw new Error('素材包不完整: ' + files.size);
-        console.log('[pvz] 素材包解包完成', files.size, '个文件');
         return files;
       } catch (e) {
         lastErr = e;
         console.warn('[pvz] 素材包加载失败，重试', attempt + 1, e);
-        await new Promise((r) => setTimeout(r, 500));
       }
     }
     throw lastErr;
@@ -809,8 +828,13 @@
   const REANIM_PLANT_URLS = ['./assets-reanim-p0-__ASSET_VERSION__.tar', './assets-reanim-p1-__ASSET_VERSION__.tar', './assets-reanim-p2-__ASSET_VERSION__.tar'];
   const REANIM_ZOMBIE_URLS = ['./assets-reanim-z0-__ASSET_VERSION__.tar', './assets-reanim-z1-__ASSET_VERSION__.tar', './assets-reanim-z2-__ASSET_VERSION__.tar', './assets-reanim-z3-__ASSET_VERSION__.tar', './assets-reanim-z4-__ASSET_VERSION__.tar', './assets-reanim-z5-__ASSET_VERSION__.tar', './assets-reanim-z6-__ASSET_VERSION__.tar'];
   const reanimGroup = window.__REANIM_GROUP || {};
-  const packReanimGroup = async (urls, kind, conc = 99) => {
-    const one = (url) => fetchAssetPack(url).catch(e => {
+  const packReanimGroup = async (urls, kind, conc = 99, onProgress = null) => {
+    const got = new Map();
+    const bump = (url) => (n) => {
+      got.set(url, n);
+      if (onProgress) onProgress([...got.values()].reduce((a, b) => a + b, 0));
+    };
+    const one = (url) => fetchAssetPack(url, onProgress ? bump(url) : null).catch(e => {
       console.warn('[pvz] reanim 分包失败', url, e);
       return null;
     });
@@ -829,7 +853,11 @@
     return keys;
   };
   // 植物：下载 + 解码都完成后才放行首屏
-  const plantKeys = await packReanimGroup(REANIM_PLANT_URLS, 'plant');
+  const PLANT_MB = 3.6;
+  const plantProg = (got) => {
+    loadingText.textContent = '正在加载植物素材 ' + Math.min(PLANT_MB, got / 1048576).toFixed(1) + ' / ' + PLANT_MB + ' MB…';
+  };
+  const plantKeys = await packReanimGroup(REANIM_PLANT_URLS, 'plant', 99, plantProg);
   await Promise.all(plantKeys.map(([k, v]) => enqueue(k, v)));
   // 僵尸：等植物包落地后再启动（错开并发，别和首屏抢带宽），2 包一批串行推进
   const packZombie = () => packReanimGroup(REANIM_ZOMBIE_URLS, 'zombie', 2)
